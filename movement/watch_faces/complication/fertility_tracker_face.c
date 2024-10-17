@@ -26,20 +26,42 @@
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
-
+    //(void) settings;
+    if(*context_ptr = NULL)
+    {
+        *context_ptr = malloc(sizeof(fertility_tracker_mem_t));
+    } 
 }
 
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
 {
-
+    (void) settings;
+    (void) context;
 }
 
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
 {
+    (void) settings;
+    fertility_tracker_mem_t *state = (fertility_tracker_mem_t *) context;
+    switch(event.event_type)
+    {
+        case EVENT_MODE_BUTTON_UP:
+            movement_move_to_next_face();
+            break;
 
-}
+        case EVENT_LIGHT_BUTTON_DOWN:
+            movement_illuminate_led();
+            break;
+
+        case EVENT_TIMEOUT:
+            movement_move_to_face(0);
+            break;
+
+
+    }
 
 void fertility_tracker_face_resign(movement_settings_t *settings, void *context)
 {
-
+    (void) settings;
+    (void) context;
 }

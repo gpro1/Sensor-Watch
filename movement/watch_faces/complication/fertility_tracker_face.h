@@ -27,6 +27,14 @@
 
 #include "movement.h"
 
+#define MEMORY_NUM_DAYS 60 //Number of days to store data
+
+typedef struct {
+    uint8_t fluid_buf[MEMORY_NUM_DAYS];
+    float temp_buf[MEMORY_NUM_DAYS];
+    uint16_t data_index;
+} fertility_tracker_mem_t
+
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context);
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
