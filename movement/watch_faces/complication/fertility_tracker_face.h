@@ -29,10 +29,13 @@
 
 #define MEMORY_NUM_DAYS 60 //Number of days to store data
 
+enum fertility_face_state_t {CALENDAR, DATA_ENTRY, ERROR};
+
 typedef struct {
     uint8_t fluid_buf[MEMORY_NUM_DAYS];
     float temp_buf[MEMORY_NUM_DAYS];
     uint16_t data_index;
+    enum fertility_face_state_t state;
 } fertility_tracker_mem_t
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);

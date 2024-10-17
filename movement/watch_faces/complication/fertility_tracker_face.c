@@ -31,6 +31,7 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
     {
         *context_ptr = malloc(sizeof(fertility_tracker_mem_t));
     } 
+    (fertility_tracker_mem_t*)context_ptr->state = CALENDAR;
 }
 
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
@@ -42,7 +43,7 @@ void fertility_tracker_face_activate(movement_settings_t *settings, void *contex
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
 {
     (void) settings;
-    fertility_tracker_mem_t *state = (fertility_tracker_mem_t *) context;
+    fertility_tracker_mem_t *face_buf= (fertility_tracker_mem_t *) context;
     switch(event.event_type)
     {
         case EVENT_MODE_BUTTON_UP:
@@ -57,6 +58,48 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             movement_move_to_face(0);
             break;
 
+        case EVENT_ALARM_BUTTON_UP:
+            //new case depending on face state
+            break;
+        
+        case EVENT_ALARM_LONG_UP:
+            //Change between calendar view and data entry
+            switch(face_buf->state)
+            {
+                case CALENDAR:
+                    face_buf->state = DATA_ENTRY;
+                    break;
+                
+                case DATA_ENTRY:
+                    face_buf->state = CALENDAR;
+                    break;
+                
+                default:
+                    face_buf->state = CALENDAR;
+                    break;
+            }
+            break;
+
+        case EVENT_TICK:
+            switch(face_buf->state)
+            {
+                case CALENDAR:
+                    watch_display_string(" Cal",4);
+                    break;
+                
+                case DATA_ENTRY:
+                    watch_display_string("Data",4);
+                    break;
+
+                default:
+                    watch_clear_display();
+                    break;
+            }
+
+            break;
+
+        default:
+            break;
 
     }
 
