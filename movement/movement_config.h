@@ -36,7 +36,8 @@ const watch_face_t watch_faces[] = {
     preferences_face,
     set_time_face,
     thermistor_readout_face,
-    voltage_face
+    voltage_face,
+    fertility_tracker_face
 };
 
 #define MOVEMENT_NUM_FACES (sizeof(watch_faces) / sizeof(watch_face_t))
