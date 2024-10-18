@@ -23,15 +23,16 @@
  */
 
 #include "fertility_tracker_face.h"
+#include <stdlib.h>
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
     //(void) settings;
-    if(*context_ptr = NULL)
+    if(*context_ptr == NULL)
     {
         *context_ptr = malloc(sizeof(fertility_tracker_mem_t));
     } 
-    (fertility_tracker_mem_t*)context_ptr->state = CALENDAR;
+    ((fertility_tracker_mem_t*)context_ptr)->state = CALENDAR;
 }
 
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
@@ -102,6 +103,9 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             break;
 
     }
+
+    return(true);
+}
 
 void fertility_tracker_face_resign(movement_settings_t *settings, void *context)
 {

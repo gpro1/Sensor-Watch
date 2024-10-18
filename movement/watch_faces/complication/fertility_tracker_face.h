@@ -36,7 +36,7 @@ typedef struct {
     float temp_buf[MEMORY_NUM_DAYS];
     uint16_t data_index;
     enum fertility_face_state_t state;
-} fertility_tracker_mem_t
+} fertility_tracker_mem_t;
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context);
