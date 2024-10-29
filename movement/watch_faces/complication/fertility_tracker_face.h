@@ -38,6 +38,7 @@ typedef struct {
     uint8_t fluid_input;
     float temp_input;
     watch_date_time time_input;
+    bool confirm_input;
     uint16_t data_index;
     enum fertility_face_state_t state;
 

@@ -45,6 +45,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 {
     (void) settings;
     fertility_tracker_mem_t *face_buf= (fertility_tracker_mem_t *) context;
+    watch_date_time temp_time;
     switch(event.event_type)
     {
         case EVENT_MODE_BUTTON_UP:
@@ -118,7 +119,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case CONFIRM_ENTRY:
                     face_buf->state = CALENDAR;
-                    watch_display_string("Data",4);
+                    watch_display_string(" CAL ",4);
+                    watch_display_string("  ",0);
                     if(face_buf->confirm_input == true)
                     {
                         face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
@@ -151,7 +153,9 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         face_buf->fluid_input = 0;
                     }
-                    watch_display(printf("%u\n", face_buf->fluid_buf),6)
+                    char buf[2];
+                    snprintf(buf, sizeof(buf), "%hu   ", face_buf->fluid_input);
+                    watch_display_string(buf, 4);
                     break;
 
                 case TEMP_ENTRY_1:
@@ -206,7 +210,10 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             switch(face_buf->state)
             {
                 case CALENDAR:
-                    watch_date_time temp_time = watch_rtc_get_date_time();
+                    
+                    temp_time = watch_rtc_get_date_time();
+                    char buf[2];
+    
                     //increment data index if it is a new day, reset input buffers
                     if(compare_dates(temp_time, face_buf->time_buf[face_buf->data_index]) != true)
                     {
@@ -226,8 +233,10 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         face_buf->temp_input = face_buf->temp_buf[face_buf->data_index];
                         face_buf->time_input = temp_time;
                     }
+                   
                     watch_display_string("FL",0);
-                    watch_display(printf("%u\n", face_buf->fluid_buf),6)
+                    snprintf(buf, sizeof(buf), "%hu   ",face_buf->fluid_input);
+                    watch_display_string(buf, 4);
                     face_buf->state = FLUID_ENTRY;
                     break;
 
@@ -294,12 +303,13 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             switch(face_buf->state)
             {
                 case CALENDAR:
-                    //watch_display_string(" Cal",4);
+                    watch_display_string(" CAL ",4);
+                    watch_display_string("  ",0);
                     break;
                 
-                case DATA_ENTRY:
+                /*case DATA_ENTRY:
                     watch_display_string("Data",4);
-                    break;
+                    break;*/
 
                 default:
                     //watch_clear_display();
