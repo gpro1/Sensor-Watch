@@ -97,7 +97,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 break;
 
                 case FLUID_ENTRY:
-                    face_buf->state = TEMP_ENTRY_1;
+                    face_buf->state = CONFIRM_ENTRY;
                     break;
 
                 case TEMP_ENTRY_1:
@@ -118,6 +118,14 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case CONFIRM_ENTRY:
                     face_buf->state = CALENDAR;
+                    watch_display_string("Data",4);
+                    if(face_buf->confirm_input == true)
+                    {
+                        face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
+                        face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input;
+                        face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
+                    }
+
                 break;
 
                 case ERROR:
@@ -138,11 +146,12 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case FLUID_ENTRY:
                     //Increment fluid entry buffer, display current selection
-                    face_buf->fluid_buf[face_buf->data_index] += 1;
-                    if(face_buf->fluid_buf[face_buf->data_index] > 3)
+                    face_buf->fluid_input += 1;
+                    if(face_buf->fluid_input > 3)
                     {
-                        face_buf->fluid_buf[face_buf->data_index] = 0;
+                        face_buf->fluid_input = 0;
                     }
+                    watch_display(printf("%u\n", face_buf->fluid_buf),6)
                     break;
 
                 case TEMP_ENTRY_1:
@@ -171,6 +180,17 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case CONFIRM_ENTRY:
                 //Cycle between Y and N for confirmation
+                    if(face_buf->confirm_input == true)
+                    {
+                        face_buf->confirm_input = false;
+                        watch_display_string("SAVE", 5);
+                    }
+                    else
+                    {
+                        face_buf->confirm_input = true;
+                        watch_display_string(" DEL", 5);
+                    }
+
                 break;
 
                 case ERROR:
@@ -186,8 +206,30 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             switch(face_buf->state)
             {
                 case CALENDAR:
+                    watch_date_time temp_time = watch_rtc_get_date_time();
+                    //increment data index if it is a new day, reset input buffers
+                    if(compare_dates(temp_time, face_buf->time_buf[face_buf->data_index]) != true)
+                    {
+                        face_buf->data_index++;
+                        if(face_buf->data_index >= MEMORY_NUM_DAYS)
+                        {
+                            face_buf->data_index = 0;
+                        }
+                        face_buf->fluid_input = 0;
+                        face_buf->temp_input = 0.0f;
+                        face_buf->time_input = temp_time;
+                    }
+                    else
+                    {
+                        //Set input buffers to previous entry (with updated time)
+                        face_buf->fluid_input = face_buf->fluid_buf[face_buf->data_index];
+                        face_buf->temp_input = face_buf->temp_buf[face_buf->data_index];
+                        face_buf->time_input = temp_time;
+                    }
+                    watch_display_string("FL",0);
+                    watch_display(printf("%u\n", face_buf->fluid_buf),6)
                     face_buf->state = FLUID_ENTRY;
-                break;
+                    break;
 
                 case FLUID_ENTRY:
                 break;
@@ -252,7 +294,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             switch(face_buf->state)
             {
                 case CALENDAR:
-                    watch_display_string(" Cal",4);
+                    //watch_display_string(" Cal",4);
                     break;
                 
                 case DATA_ENTRY:
@@ -260,7 +302,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     break;
 
                 default:
-                    watch_clear_display();
+                    //watch_clear_display();
                     break;
             }
 
@@ -278,4 +320,14 @@ void fertility_tracker_face_resign(movement_settings_t *settings, void *context)
 {
     (void) settings;
     (void) context;
+}
+
+//Compares the date of both arguments. Returns true if they have the same date, otherwise false.
+static bool compare_dates(watch_date_time time1, watch_date_time time2)
+{
+    bool result;
+    result = (time1.unit.month == time2.unit.month);
+    result &= (time1.unit.day == time2.unit.day);
+    result &= (time1.unit.year == time2.unit.year);
+    return result;
 }

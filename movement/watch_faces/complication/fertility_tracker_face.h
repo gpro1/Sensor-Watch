@@ -34,14 +34,20 @@ enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, 
 typedef struct {
     uint8_t fluid_buf[MEMORY_NUM_DAYS];
     float temp_buf[MEMORY_NUM_DAYS];
+    watch_date_time time_buf[MEMORY_NUM_DAYS];
+    uint8_t fluid_input;
+    float temp_input;
+    watch_date_time time_input;
     uint16_t data_index;
     enum fertility_face_state_t state;
+
 } fertility_tracker_mem_t;
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context);
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
 void fertility_tracker_face_resign(movement_settings_t *settings, void *context);
+static bool compare_dates(watch_date_time time1, watch_date_time time2);
 
 #define fertility_tracker_face ((const watch_face_t){ \
     fertility_tracker_face_setup, \
