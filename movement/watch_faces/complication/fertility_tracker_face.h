@@ -29,7 +29,7 @@
 
 #define MEMORY_NUM_DAYS 60 //Number of days to store data
 
-enum fertility_face_state_t {CALENDAR, DATA_ENTRY, ERROR};
+enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, TEMP_ENTRY_3, TEMP_ENTRY_4, CONFIRM_ENTRY, ERROR};
 
 typedef struct {
     uint8_t fluid_buf[MEMORY_NUM_DAYS];

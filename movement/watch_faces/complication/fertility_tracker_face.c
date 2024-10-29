@@ -51,33 +51,200 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             movement_move_to_next_face();
             break;
 
-        case EVENT_LIGHT_BUTTON_DOWN:
-            movement_illuminate_led();
-            break;
-
         case EVENT_TIMEOUT:
             movement_move_to_face(0);
             break;
 
-        case EVENT_ALARM_BUTTON_UP:
-            //new case depending on face state
-            break;
-        
-        case EVENT_ALARM_LONG_UP:
-            //Change between calendar view and data entry
+        case EVENT_LIGHT_BUTTON_DOWN:
+            
             switch(face_buf->state)
             {
                 case CALENDAR:
-                    face_buf->state = DATA_ENTRY;
+                    movement_illuminate_led();
                     break;
-                
-                case DATA_ENTRY:
-                    face_buf->state = CALENDAR;
+
+                case FLUID_ENTRY:
                     break;
-                
+
+                case TEMP_ENTRY_1:
+                    break;
+
+                case TEMP_ENTRY_2:
+                    break;
+
+                case TEMP_ENTRY_3:
+                    break;
+
+                case TEMP_ENTRY_4: 
+                    break;
+
+                case CONFIRM_ENTRY:
+                    break;
+
+                case ERROR:
+                    break;
+
                 default:
-                    face_buf->state = CALENDAR;
                     break;
+            }
+            break;
+
+        case EVENT_LIGHT_BUTTON_UP:
+
+            switch(face_buf->state)
+            {
+                case CALENDAR:
+                break;
+
+                case FLUID_ENTRY:
+                    face_buf->state = TEMP_ENTRY_1;
+                    break;
+
+                case TEMP_ENTRY_1:
+                    face_buf->state = TEMP_ENTRY_2;
+                    break;
+
+                case TEMP_ENTRY_2:
+                    face_buf->state = TEMP_ENTRY_3;
+                    break;
+
+                case TEMP_ENTRY_3:
+                    face_buf->state = TEMP_ENTRY_4;
+                    break;
+
+                case TEMP_ENTRY_4: 
+                    face_buf->state = CONFIRM_ENTRY;
+                break;
+
+                case CONFIRM_ENTRY:
+                    face_buf->state = CALENDAR;
+                break;
+
+                case ERROR:
+                break;
+
+                default:
+                break;
+            }
+            break;
+
+        case EVENT_ALARM_BUTTON_UP:
+            //new case depending on face state
+            switch(face_buf->state)
+            {
+                case CALENDAR:
+                //Increment current date, display fertility data
+                break;
+
+                case FLUID_ENTRY:
+                    //Increment fluid entry buffer, display current selection
+                    face_buf->fluid_buf[face_buf->data_index] += 1;
+                    if(face_buf->fluid_buf[face_buf->data_index] > 3)
+                    {
+                        face_buf->fluid_buf[face_buf->data_index] = 0;
+                    }
+                    break;
+
+                case TEMP_ENTRY_1:
+                    //Increment temperature digit 1, display current selection
+                    face_buf->temp_buf[face_buf->data_index] += 10.0f;
+                    //TODO: Add limit for this
+                break;
+
+                case TEMP_ENTRY_2:
+                    //Increment temperature digit 2, display current selection
+                    face_buf->temp_buf[face_buf->data_index] += 1.0f;
+                    //TODO: Add limit for this
+                    break;
+
+                case TEMP_ENTRY_3:
+                    //Increment temperature digit 3, display current selection
+                    face_buf->temp_buf[face_buf->data_index] += 0.1f;
+                    //TODO: Add limit for this
+                    break;
+
+                case TEMP_ENTRY_4: 
+                    //Increment temperature digit 4, display current selection
+                    face_buf->temp_buf[face_buf->data_index] += 0.01f;
+                    //TODO: Add limit for this
+                    break;
+
+                case CONFIRM_ENTRY:
+                //Cycle between Y and N for confirmation
+                break;
+
+                case ERROR:
+                break;
+
+                default:
+                break;
+            }
+            break;
+        
+        case EVENT_ALARM_LONG_UP:
+
+            switch(face_buf->state)
+            {
+                case CALENDAR:
+                    face_buf->state = FLUID_ENTRY;
+                break;
+
+                case FLUID_ENTRY:
+                break;
+
+                case TEMP_ENTRY_1:
+                break;
+
+                case TEMP_ENTRY_2:
+                break;
+
+                case TEMP_ENTRY_3:
+                break;
+
+                case TEMP_ENTRY_4: 
+                break;
+
+                case CONFIRM_ENTRY:
+                break;
+
+                case ERROR:
+                break;
+
+                default:
+                break;
+            }
+            
+            break;
+
+        case EVENT_ALARM_LONG_PRESS:
+            switch(face_buf->state)
+            {
+                case CALENDAR:
+                break;
+
+                case FLUID_ENTRY:
+                break;
+
+                case TEMP_ENTRY_1:
+                break;
+
+                case TEMP_ENTRY_2:
+                break;
+
+                case TEMP_ENTRY_3:
+                break;
+
+                case TEMP_ENTRY_4: 
+                break;
+
+                case CONFIRM_ENTRY:
+                break;
+
+                case ERROR:
+                break;
+
+                default:
+                break;
             }
             break;
 
