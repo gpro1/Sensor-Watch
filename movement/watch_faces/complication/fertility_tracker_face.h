@@ -36,7 +36,7 @@ typedef struct {
     float temp_buf[MEMORY_NUM_DAYS];
     watch_date_time time_buf[MEMORY_NUM_DAYS];
     uint8_t fluid_input;
-    float temp_input;
+    uint8_t temp_input[4]; //Integer digits 
     watch_date_time time_input;
     bool confirm_input;
     uint16_t data_index;

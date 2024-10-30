@@ -65,24 +65,31 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     break;
 
                 case FLUID_ENTRY:
+                    movement_illuminate_led();
                     break;
 
                 case TEMP_ENTRY_1:
+                    movement_illuminate_led();
                     break;
 
                 case TEMP_ENTRY_2:
+                    movement_illuminate_led();
                     break;
 
                 case TEMP_ENTRY_3:
+                    movement_illuminate_led();
                     break;
 
                 case TEMP_ENTRY_4: 
+                    movement_illuminate_led();
                     break;
 
                 case CONFIRM_ENTRY:
+                    movement_illuminate_led();
                     break;
 
                 case ERROR:
+                    movement_illuminate_led();
                     break;
 
                 default:
@@ -98,7 +105,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 break;
 
                 case FLUID_ENTRY:
-                    face_buf->state = CONFIRM_ENTRY;
+                    watch_display_string(" T",0);
+                    face_buf->state = TEMP_ENTRY_1;
                     break;
 
                 case TEMP_ENTRY_1:
@@ -114,6 +122,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     break;
 
                 case TEMP_ENTRY_4: 
+                    watch_display_string("SA",0);
                     face_buf->state = CONFIRM_ENTRY;
                 break;
 
@@ -124,7 +133,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     if(face_buf->confirm_input == true)
                     {
                         face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
-                        face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input;
+                        face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input[0] + face_buf->temp_input[1] + (0.1 * face_buf->temp_input[2]) + (0.01 * face_buf->temp_input[3]);
                         face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
                     }
 
@@ -139,6 +148,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             break;
 
         case EVENT_ALARM_BUTTON_UP:
+            char buf[6];
             //new case depending on face state
             switch(face_buf->state)
             {
@@ -157,27 +167,47 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     break;
 
                 case TEMP_ENTRY_1:
-                    //Increment temperature digit 1, display current selection
-                    face_buf->temp_buf[face_buf->data_index] += 10.0f;
-                    //TODO: Add limit for this
-                break;
+                    //Increment upper two temperature digits, display current selection
+                    face_buf->temp_input[0] += 10;
+                    if(face_buf->temp_input[0] > 100)
+                    {
+                        face_buf->temp_input = 90;
+                    }
+                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    watch_display_string(buf, 4);
+                    break;
 
                 case TEMP_ENTRY_2:
                     //Increment temperature digit 2, display current selection
-                    face_buf->temp_buf[face_buf->data_index] += 1.0f;
-                    //TODO: Add limit for this
+                    face_buf->temp_input[1] += 1;
+                    if(face_buf->temp_input[1] > 9)
+                    {
+                        face_buf->temp_input[1] = 0;
+                    }
+                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    watch_display_string(buf, 4);
                     break;
 
                 case TEMP_ENTRY_3:
-                    //Increment temperature digit 3, display current selection
-                    face_buf->temp_buf[face_buf->data_index] += 0.1f;
-                    //TODO: Add limit for this
+                    //Increment temperature 10th decimal, display current selection
+                    face_buf->temp_input[2] += 1;
+                    if(face_buf->temp_input[2] > 9)
+                    {
+                        face_buf->temp_input[2] = 0;
+                    }
+                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    watch_display_string(buf, 4);
                     break;
 
                 case TEMP_ENTRY_4: 
-                    //Increment temperature digit 4, display current selection
-                    face_buf->temp_buf[face_buf->data_index] += 0.01f;
-                    //TODO: Add limit for this
+                    //Increment temperature 100th decimal, display current selection
+                    face_buf->temp_input[3] += 1;
+                    if(face_buf->temp_input[3] > 9)
+                    {
+                        face_buf->temp_input[3] = 0;
+                    }
+                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    watch_display_string(buf, 4);
                     break;
 
                 case CONFIRM_ENTRY:
@@ -220,14 +250,27 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                             face_buf->data_index = 0;
                         }
                         face_buf->fluid_input = 0;
-                        face_buf->temp_input = 0.0f;
+                        face_buf->temp_input[0] = 90;
+                        face_buf->temp_input[1] = 7;
+                        face_buf->temp_input[2] = 0;
+                        face_buf->temp_input[3] = 0;
                         face_buf->time_input = temp_time;
                     }
                     else
                     {
                         //Set input buffers to previous entry (with updated time)
                         face_buf->fluid_input = face_buf->fluid_buf[face_buf->data_index];
-                        face_buf->temp_input = face_buf->temp_buf[face_buf->data_index];
+                        if(face_buf->temp_buf[face_buf->data_index] >= 100.0)
+                        {
+                            face_buf->temp_input[0] = 100;
+                        }
+                        else
+                        {
+                            face_buf->temp_input[0] = 90;
+                        }
+                        face_buf->temp_input[1] = (uint8_t)(face_buf->temp_buf[face_buf->data_index] % 10);     
+                        face_buf->temp_input[2] = (uint8_t)((face_buf->temp_buf[face_buf->data_index] * 10) % 10);
+                        face_buf->temp_input[3] = (uint8_t)((face_buf->temp_buf[face_buf->data_index] * 100) % 10);
                         face_buf->time_input = temp_time;
                     }
                    
