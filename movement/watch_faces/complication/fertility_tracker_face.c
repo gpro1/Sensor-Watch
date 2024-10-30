@@ -174,7 +174,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         face_buf->temp_input[0] = 90;
                     }
-                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    snprintf(buf, sizeof(buf), "  %2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
                     watch_display_string(buf, 4);
                     break;
 
@@ -185,7 +185,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         face_buf->temp_input[1] = 0;
                     }
-                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    snprintf(buf, sizeof(buf), "  %2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
                     watch_display_string(buf, 4);
                     break;
 
@@ -196,7 +196,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         face_buf->temp_input[2] = 0;
                     }
-                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    snprintf(buf, sizeof(buf), "  %2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
                     watch_display_string(buf, 4);
                     break;
 
@@ -207,7 +207,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         face_buf->temp_input[3] = 0;
                     }
-                    snprintf(buf, sizeof(buf), "  %hu%hu%hu%hu", face_buf->temp_input[0], face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    snprintf(buf, sizeof(buf), "  %2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
                     watch_display_string(buf, 4);
                     break;
 
