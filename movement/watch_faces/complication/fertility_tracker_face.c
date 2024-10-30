@@ -46,6 +46,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
     (void) settings;
     fertility_tracker_mem_t *face_buf= (fertility_tracker_mem_t *) context;
     watch_date_time temp_time;
+    char buf[6];
     switch(event.event_type)
     {
         case EVENT_MODE_BUTTON_UP:
@@ -148,7 +149,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             break;
 
         case EVENT_ALARM_BUTTON_UP:
-            char buf[6];
+            
             //new case depending on face state
             switch(face_buf->state)
             {
