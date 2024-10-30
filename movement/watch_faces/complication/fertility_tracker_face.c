@@ -153,9 +153,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         face_buf->fluid_input = 0;
                     }
-                    char buf[2];
-                    snprintf(buf, sizeof(buf), "%hu   ", face_buf->fluid_input);
-                    watch_display_string(buf, 4);
+                    display_fluid_type(face_buf->fluid_input);
                     break;
 
                 case TEMP_ENTRY_1:
@@ -212,7 +210,6 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 case CALENDAR:
                     
                     temp_time = watch_rtc_get_date_time();
-                    char buf[2];
     
                     //increment data index if it is a new day, reset input buffers
                     if(compare_dates(temp_time, face_buf->time_buf[face_buf->data_index]) != true)
@@ -235,8 +232,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     }
                    
                     watch_display_string("FL",0);
-                    snprintf(buf, sizeof(buf), "%hu   ",face_buf->fluid_input);
-                    watch_display_string(buf, 4);
+                    display_fluid_type(face_buf->fluid_input);
+
                     face_buf->state = FLUID_ENTRY;
                     break;
 
@@ -330,6 +327,32 @@ void fertility_tracker_face_resign(movement_settings_t *settings, void *context)
 {
     (void) settings;
     (void) context;
+}
+
+static void display_fluid_type(uint8_t value)
+{
+    switch(value)
+    {
+        case 0:
+            watch_display_string("  nn  ", 4);
+        break;
+
+        case 1:
+            watch_display_string("  G   ", 4);
+        break;
+
+        case 2:
+            watch_display_string("  EL  ", 4);
+        break;
+
+        case 3:
+            watch_display_string("  EE  ", 4);
+        break;
+
+        default:
+            watch_display_string("  ERR ", 4);
+        break;
+    }
 }
 
 //Compares the date of both arguments. Returns true if they have the same date, otherwise false.
