@@ -24,6 +24,7 @@
 
 #include "fertility_tracker_face.h"
 #include <stdlib.h>
+#include <string.h>
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
