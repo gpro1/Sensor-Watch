@@ -107,6 +107,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case FLUID_ENTRY:
                     watch_display_string(" T",0);
+                    snprintf(buf, sizeof(buf), "%2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                    watch_display_string(buf, 4);
                     face_buf->state = TEMP_ENTRY_1;
                     break;
 
@@ -124,6 +126,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case TEMP_ENTRY_4: 
                     watch_display_string("SA",0);
+                    face_buf->confirm_input = true;
+                    watch_display_string("SAVE", 5);
                     face_buf->state = CONFIRM_ENTRY;
                 break;
 
@@ -216,12 +220,12 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     if(face_buf->confirm_input == true)
                     {
                         face_buf->confirm_input = false;
-                        watch_display_string("SAVE", 5);
+                        watch_display_string(" DEL", 5);
                     }
                     else
                     {
                         face_buf->confirm_input = true;
-                        watch_display_string(" DEL", 5);
+                        watch_display_string("SAVE", 5);
                     }
 
                 break;
