@@ -31,6 +31,7 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
     if(*context_ptr == NULL)
     {
         *context_ptr = malloc(sizeof(fertility_tracker_mem_t));
+        memset(context_ptr, 0, sizeof(fertility_tracker_mem_t));
     } 
     ((fertility_tracker_mem_t*)context_ptr)->state = CALENDAR;
 }
