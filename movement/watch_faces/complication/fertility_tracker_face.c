@@ -57,7 +57,13 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             break;
 
         case EVENT_TIMEOUT:
+            face_buf->state = CALENDAR;
             movement_move_to_face(0);
+            break;
+
+        case EVENT_ACTIVATE:
+            watch_display_string(" CAL ",4);
+            watch_display_string("  ",0);
             break;
 
         case EVENT_LIGHT_BUTTON_DOWN:
