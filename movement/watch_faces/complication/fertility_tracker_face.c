@@ -25,6 +25,7 @@
 #include "fertility_tracker_face.h"
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
@@ -277,7 +278,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         }
                         face_buf->temp_input[1] = ((uint8_t)face_buf->temp_buf[face_buf->data_index] % 10);     
                         face_buf->temp_input[2] = ((uint8_t)(face_buf->temp_buf[face_buf->data_index] * 10) % 10);
-                        face_buf->temp_input[3] = ((uint8_t)(face_buf->temp_buf[face_buf->data_index] * 100) % 10);
+                        face_buf->temp_input[3] = (uint8_t)((uint16_t)round(face_buf->temp_buf[face_buf->data_index] * 100) % 10);
                         face_buf->time_input = temp_time;
                     }
                    
