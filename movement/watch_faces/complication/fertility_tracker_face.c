@@ -360,7 +360,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                     if(is_fertile(face_buf))
                     {
-                        watch_display_string("FERT ",4);
+                        watch_display_string(" FERT ",4);
                     }
                     else
                     {
