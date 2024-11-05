@@ -357,7 +357,16 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             switch(face_buf->state)
             {
                 case CALENDAR:
-                    watch_display_string(" CAL ",4);
+
+                    if(is_fertile(face_buf))
+                    {
+                        watch_display_string("FERT ",4);
+                    }
+                    else
+                    {
+                        watch_display_string("NFERT ",4);
+                    }
+                    
                     watch_display_string("  ",0);
                     break;
                 
@@ -420,4 +429,21 @@ static bool compare_dates(watch_date_time time1, watch_date_time time2)
     result &= (time1.unit.day == time2.unit.day);
     result &= (time1.unit.year == time2.unit.year);
     return result;
+}
+
+static bool is_fertile(fertility_tracker_mem_t * data_buf)
+{
+    static bool state;
+
+    if(state)
+    {
+        state = false;
+        return true;
+    }
+    else
+    {
+        state = true;
+        return false;
+    }
+
 }
