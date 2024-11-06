@@ -265,7 +265,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         }
                         face_buf->fluid_input = 0;
                         face_buf->temp_input[0] = 90;
-                        face_buf->temp_input[1] = 7;
+                        face_buf->temp_input[1] = 0;
                         face_buf->temp_input[2] = 0;
                         face_buf->temp_input[3] = 0;
                         face_buf->time_input = temp_time;
