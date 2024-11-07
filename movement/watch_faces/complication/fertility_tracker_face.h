@@ -30,6 +30,7 @@
 #define MEMORY_NUM_DAYS 60 //Number of days to store data
 
 enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, TEMP_ENTRY_3, TEMP_ENTRY_4, CONFIRM_ENTRY, ERROR};
+enum cycle_state_t{MENSTRUAL, POC, ESTROGEN, SEEKING_ESTROGEN, SEEKING_TEMP_SHIFT, SEEKING_TEMP_SHIFT_EXTEND, TEMP_SHIFT_OCCURRED, RISKY, ERROR};
 
 typedef struct {
     uint8_t fluid_buf[MEMORY_NUM_DAYS];
@@ -41,6 +42,8 @@ typedef struct {
     bool confirm_input;
     uint16_t data_index;
     enum fertility_face_state_t state;
+    enum cycle_state_t cycle_state;
+    bool temp_shift_occured;
 
 } fertility_tracker_mem_t;
 

@@ -433,17 +433,62 @@ static bool compare_dates(watch_date_time time1, watch_date_time time2)
 
 static bool is_fertile(fertility_tracker_mem_t * data_buf)
 {
-    static bool state;
+    bool fertility_status = true;
 
-    if(state)
+    switch(data_buf->cycle_state)
     {
-        state = false;
-        return true;
+        case MENSTRUAL:
+            if(data_buf->temp_shift_occured == true)
+            {
+                fertility_status = true;
+            }
+            else
+            {
+                fertility_status = false;
+            }
+            break;
+
+        case POC:
+            /* Check today's fluid entry, return fertility status based on result.
+                M = F
+                G = NF
+                EL/EE = F
+            */
+            break; 
+
+        case ESTROGEN:
+            fertility_status = true;
+            break;
+
+        case SEEKING_ESTROGEN:
+            //Non-fertile on evening after entering this state (aka 2xG logged). Otherwise fertile.
+            break;
+
+        case SEEKING_TEMP_SHIFT:
+            fertility_status = true;
+            break;
+
+        case SEEKING_TEMP_SHIFT_EXTEND:
+            fertility_status = true;
+            break;
+
+        case TEMP_SHIFT_OCCURRED:
+            //Non-fertile on evening after entering this state. Otherwise fertile.
+            break;
+
+        case RISKY:
+            fertility_status = true;
+            break;
+
+        case ERROR:
+            fertility_status = true;
+            break;
+
+        default:
+            fertility_status = true;
+            break;
     }
-    else
-    {
-        state = true;
-        return false;
-    }
+
+    return true;
 
 }
