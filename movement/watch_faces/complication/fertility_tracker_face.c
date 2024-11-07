@@ -142,14 +142,25 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case CONFIRM_ENTRY:
                     face_buf->state = CALENDAR;
-                    watch_display_string(" CAL ",4);
-                    watch_display_string("  ",0);
+
                     if(face_buf->confirm_input == true)
                     {
                         face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
                         face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input[0] + face_buf->temp_input[1] + (0.1 * face_buf->temp_input[2]) + (0.01 * face_buf->temp_input[3]);
                         face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
+                        face_buf->cycle_next_state = iterate_cycle_fsm(face_buf);
                     }
+
+                    if(is_fertile(face_buf))
+                    {
+                        watch_display_string(" FERT ",4);
+                    }
+                    else
+                    {
+                        watch_display_string("NFERT ",4);
+                    }
+
+                    watch_display_string("  ",0);
 
                 break;
 
@@ -431,6 +442,65 @@ static bool compare_dates(watch_date_time time1, watch_date_time time2)
     return result;
 }
 
+//Run every time data is entered. Apply next state once per day
+static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
+{
+    enum cycle_state_t next_state = data_buf->cycle_state;
+    switch(data_buf->cycle_state)
+    {
+        case MENSTRUAL:
+            //Next state is POC after 5 days have passed in this state.
+            break;
+
+        case POC:
+            //Next state is ESTROGEN if an EE or EL was logged today.
+
+            break; 
+
+        case ESTROGEN:
+            /* Next state is SEEKING_TEMP_SHIFT if a temperature is logged today that is at least 0.2 degrees(f)
+               greater than the max of the past 6 days.
+
+               In case of one invalid temperature (90.00 or any temp > 99.50), this value can be skipped and the previous day is used.
+               In case of two invalid temperatures, both can be skipped but an extra day must be used (ie the max of 7 days).
+               In case of >2 invalid temperatures, proceed to error state
+            */
+
+            break;
+
+        case SEEKING_ESTROGEN:
+
+            break;
+
+        case SEEKING_TEMP_SHIFT:
+
+            break;
+
+        case SEEKING_TEMP_SHIFT_EXTEND:
+
+            break;
+
+        case TEMP_SHIFT_OCCURRED:
+
+            break;
+
+        case RISKY:
+
+            break;
+
+        case ERROR:
+            //Next state is MENSTRUAL when M is logged.
+
+            break;
+
+        default:
+
+            break;
+    }
+    return(next_state);
+}
+
+//Can be called any time the fsm has been iterated or any time watch face is entered
 static bool is_fertile(fertility_tracker_mem_t * data_buf)
 {
     bool fertility_status = true;
