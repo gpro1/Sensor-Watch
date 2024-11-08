@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "watch_utility.h"
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
@@ -513,10 +514,10 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 static bool is_fertile(fertility_tracker_mem_t * data_buf)
 {
     bool fertility_status = true;
+    watch_date_time temp_time;
 
     switch(data_buf->cycle_state)
     {
-
         case POC:
             /* Check today's fluid entry, return fertility status based on result.
                 First 4 days in this state if temp shift occured: M = NF 
@@ -524,6 +525,27 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
                 G = NF
                 EL/EE = F
             */
+
+           if(data_buf->fluid_buf[data_buf->data_index] > 1) //EL/EE
+           {
+                fertility_status = true;
+           }
+           else if(data_buf->fluid_buf[data_buf->data_index] == 1) //G
+           {
+                fertility_status = false;
+           }
+           else //M
+           {
+                temp_time = watch_rtc_get_date_time();
+                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 || data_buf->temp_shift_occured == true)
+                {
+                    fertility_status = false;
+                }
+                else
+                {
+                    fertility_status = true;
+                }
+           }
             break; 
 
         case ESTROGEN:
@@ -561,4 +583,49 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
 
     return true;
 
+}
+
+/*  Returns the number of days difference between the two datetime arguments.
+    Does not support more than a year. Can handle new month and new year situations
+*/
+static uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
+{
+    uint16_t date1_ytd;
+    uint16_t date2_ytd;
+    date1_ytd = watch_utility_days_since_new_year((uint16_t)date1.unit.year, (uint8_t)date1.unit.month, (uint8_t)date1.unit.day);
+    date2_ytd = watch_utility_days_since_new_year((uint16_t)date2.unit.year, (uint8_t)date2.unit.month, (uint8_t)date2.unit.day);
+    uint16_t result = 0;
+
+    if(date1.unit.year == date2.unit.year)
+    {
+        result = abs(date2_ytd - date1_ytd);
+    }
+    else
+    {
+        if(date1.unit.year > date2.unit.year)
+        {
+            if(is_leap((uint16_t)date2.unit.year))
+            {
+                result = (366 - date2_ytd) + date1_ytd;
+            }
+            else
+            {
+                result = (365 - date2_ytd) + date1_ytd;
+            }
+        }
+        else
+        {
+            if(is_leap((uint16_t)date1.unit.year))
+            {
+                result = (366 - date1_ytd) + date2_ytd;
+            }
+            else
+            {
+                result = (365 - date1_ytd) + date2_ytd;
+            }
+        }
+
+    }
+
+    return result;
 }
