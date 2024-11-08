@@ -41,7 +41,19 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
 {
     (void) settings;
-    (void) context;
+    fertility_tracker_mem_t * face_buf = (fertility_tracker_mem_t *) context;
+    watch_date_time temp_time;
+
+    //Update state if a new day has arrived
+    temp_time = watch_rtc_get_date_time();
+    if(!dates_are_equal(temp_time, face_buf->cycle_state_start))
+    {
+        //TODO: Check for missed days?
+        face_buf->cycle_state = face_buf->cycle_next_state;
+        face_buf->cycle_state_start = temp_time;
+    }
+
+
 }
 
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
@@ -267,7 +279,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     temp_time = watch_rtc_get_date_time();
     
                     //increment data index if it is a new day, reset input buffers
-                    if(compare_dates(temp_time, face_buf->time_buf[face_buf->data_index]) != true)
+                    if(dates_are_equal(temp_time, face_buf->time_buf[face_buf->data_index]) != true)
                     {
                         face_buf->data_index++;
                         if(face_buf->data_index >= MEMORY_NUM_DAYS)
@@ -433,7 +445,7 @@ static void display_fluid_type(uint8_t value)
 }
 
 //Compares the date of both arguments. Returns true if they have the same date, otherwise false.
-static bool compare_dates(watch_date_time time1, watch_date_time time2)
+static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 {
     bool result;
     result = (time1.unit.month == time2.unit.month);
@@ -448,9 +460,6 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     enum cycle_state_t next_state = data_buf->cycle_state;
     switch(data_buf->cycle_state)
     {
-        case MENSTRUAL:
-            //Next state is POC after 5 days have passed in this state.
-            break;
 
         case POC:
             //Next state is ESTROGEN if an EE or EL was logged today.
@@ -489,7 +498,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break;
 
         case ERROR:
-            //Next state is MENSTRUAL when M is logged.
+            //Next state is POC when M is logged.
 
             break;
 
@@ -507,20 +516,11 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
 
     switch(data_buf->cycle_state)
     {
-        case MENSTRUAL:
-            if(data_buf->temp_shift_occured == true)
-            {
-                fertility_status = true;
-            }
-            else
-            {
-                fertility_status = false;
-            }
-            break;
 
         case POC:
             /* Check today's fluid entry, return fertility status based on result.
-                M = F
+                First 4 days in this state if temp shift occured: M = NF 
+                else M = F
                 G = NF
                 EL/EE = F
             */

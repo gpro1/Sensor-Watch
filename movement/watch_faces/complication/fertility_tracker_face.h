@@ -44,9 +44,8 @@ typedef struct {
     enum fertility_face_state_t state;
     enum cycle_state_t cycle_next_state;
     enum cycle_state_t cycle_state;
+    watch_date_time cycle_state_start;
     bool temp_shift_occured;
-
-
 } fertility_tracker_mem_t;
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
@@ -54,7 +53,7 @@ void fertility_tracker_face_activate(movement_settings_t *settings, void *contex
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
 void fertility_tracker_face_resign(movement_settings_t *settings, void *context);
 static void display_fluid_type(uint8_t value);
-static bool compare_dates(watch_date_time time1, watch_date_time time2);
+static bool dates_are_equal(watch_date_time time1, watch_date_time time2);
 static bool is_fertile(fertility_tracker_mem_t * data_buf);
 static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf);
 
