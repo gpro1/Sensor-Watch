@@ -550,22 +550,26 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
 
         case ESTROGEN:
             fertility_status = true;
+            //NF after 7pm if next state is seeking_estrogen
             break;
 
         case SEEKING_ESTROGEN:
-            //Non-fertile on evening after entering this state (aka 2xG logged). Otherwise fertile.
+            //Non-fertile unless next state != seeking_estrogen
+            fertility_status = false;
             break;
 
         case SEEKING_TEMP_SHIFT:
             fertility_status = true;
+            //NF after 7pm if next state is TEMP_SHIFT_OCCURED
             break;
 
         case SEEKING_TEMP_SHIFT_EXTEND:
             fertility_status = true;
+            //NF after 7pm if next state is TEMP_SHIFT_OCCURED
             break;
 
         case TEMP_SHIFT_OCCURRED:
-            //Non-fertile on evening after entering this state. Otherwise fertile.
+            fertility_status = false;
             break;
 
         case RISKY:
