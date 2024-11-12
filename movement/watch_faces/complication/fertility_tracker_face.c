@@ -49,11 +49,14 @@ void fertility_tracker_face_activate(movement_settings_t *settings, void *contex
     temp_time = watch_rtc_get_date_time();
     if(!dates_are_equal(temp_time, face_buf->cycle_state_start))
     {
-        //TODO: Check for missed days?
-        face_buf->cycle_state = face_buf->cycle_next_state;
-        face_buf->cycle_state_start = temp_time;
+        //TODO: Check for missed days, log default values
+        if(face_buf->cycle_state != face_buf->cycle_next_state) //Cycle state if next state != current state
+        {
+            face_buf->cycle_prev_state = face_buf->cycle_state;
+            face_buf->cycle_state = face_buf->cycle_next_state;
+            face_buf->cycle_state_start = temp_time;
+        }
     }
-
 
 }
 
@@ -197,9 +200,9 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 case FLUID_ENTRY:
                     //Increment fluid entry buffer, display current selection
                     face_buf->fluid_input += 1;
-                    if(face_buf->fluid_input > 3)
+                    if(face_buf->fluid_input > 4)
                     {
-                        face_buf->fluid_input = 0;
+                        face_buf->fluid_input = 1;
                     }
                     display_fluid_type(face_buf->fluid_input);
                     break;
@@ -287,7 +290,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         {
                             face_buf->data_index = 0;
                         }
-                        face_buf->fluid_input = 0;
+                        face_buf->fluid_input = 1;
                         face_buf->temp_input[0] = 90;
                         face_buf->temp_input[1] = 0;
                         face_buf->temp_input[2] = 0;
@@ -424,18 +427,22 @@ static void display_fluid_type(uint8_t value)
     switch(value)
     {
         case 0:
-            watch_display_string("  nn  ", 4);
+            watch_display_string("      ", 4);
         break;
 
         case 1:
-            watch_display_string("  G   ", 4);
+            watch_display_string("  nn  ", 4);
         break;
 
         case 2:
-            watch_display_string("  EL  ", 4);
+            watch_display_string("  G   ", 4);
         break;
 
         case 3:
+            watch_display_string("  EL  ", 4);
+        break;
+
+        case 4:
             watch_display_string("  EE  ", 4);
         break;
 
@@ -459,11 +466,21 @@ static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 {
     enum cycle_state_t next_state = data_buf->cycle_state;
+    float historic_max_temp_f;
+    watch_date_time temp_time;
+    uint16_t days_in_state;
+
+    temp_time = watch_rtc_get_date_time();
+
     switch(data_buf->cycle_state)
     {
 
         case POC:
             //Next state is ESTROGEN if an EE or EL was logged today.
+            if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL OR EE
+            {
+                data_buf->cycle_next_state = ESTROGEN;
+            }
 
             break; 
 
@@ -475,14 +492,51 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                In case of two invalid temperatures, both can be skipped but an extra day must be used (ie the max of 7 days).
                In case of >2 invalid temperatures, proceed to error state
             */
+           historic_max_temp_f = get_historic_max_temp_f(data_buf);
+           if(historic_max_temp_f == INVALID_TEMP)
+           {
+                enter_error_state();
+           }
+           else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
+           {
+                //Move to seeking temp shift, log historic max
+                data_buf->cycle_next_state = SEEKING_TEMP_SHIFT;
+                data_buf->historic_max_temp_f = historic_max_temp_f;
+           }
+           //else if()
+           //This case is when two G has been logged for fluid
+           //Next state is seeking estrogen
+           //Need to work out priority vs previous condition in case both conditions occur
+           else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged
+           {
+                data_buf->cycle_next_state = POC;
+           }
 
             break;
 
         case SEEKING_ESTROGEN:
+            if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL/EE logged
+            {
+                data_buf->cycle_next_state = ESTROGEN;
+            }
+            else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M loggeed
+            {
+                data_buf->cycle_next_state = POC;
+            }
 
             break;
 
         case SEEKING_TEMP_SHIFT:
+            days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time);
+
+            if(days_in_state >= 2)
+            {
+                
+            }
+            else if(days_in_state >= 4)
+            {
+
+            }
 
             break;
 
@@ -526,17 +580,17 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
                 G = NF
                 EL/EE = F
             */
-           if(data_buf->fluid_buf[data_buf->data_index] > 1) //EL/EE
+           if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL/EE
            {
                 fertility_status = true;
            }
-           else if(data_buf->fluid_buf[data_buf->data_index] == 1) //G
+           else if(data_buf->fluid_buf[data_buf->data_index] == 2) //G
            {
                 fertility_status = false;
            }
            else //M
            {
-                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->temp_shift_occured == true)
+                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->cycle_prev_state == TEMP_SHIFT_OCCURRED)
                 {
                     fertility_status = false;
                 }
@@ -663,4 +717,41 @@ static uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
     }
 
     return result;
+}
+
+static void enter_error_state(fertility_tracker_mem_t * data_buf)
+{
+    data_buf->cycle_state = ERROR;
+}
+
+//returns a temperature value from num_days_prev days before today
+static float get_prev_temp(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf)
+{
+    uint16_t index;
+    if(num_days_prev > data_buf->data_index)
+    {
+        index = MEMORY_NUM_DAYS - (num_days_prev - data_buf->data_index)
+    }
+    else
+    {
+        index = data_buf->data_index - num_days_prev;
+    }
+    
+    return(data_buf->temp_buf[index]);
+}
+
+//returns a fluid value from num_days_prev days before today
+static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf)
+{
+    uint16_t index;
+    if(num_days_prev > data_buf->data_index)
+    {
+        index = MEMORY_NUM_DAYS - (num_days_prev - data_buf->data_index)
+    }
+    else
+    {
+        index = data_buf->data_index - num_days_prev;
+    }
+    
+    return(data_buf->fluid_buf[index]);
 }

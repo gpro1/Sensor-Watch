@@ -28,6 +28,7 @@
 #include "movement.h"
 
 #define MEMORY_NUM_DAYS 60 //Number of days to store data
+#define INVALID_TEMP 90.00f
 
 enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, TEMP_ENTRY_3, TEMP_ENTRY_4, CONFIRM_ENTRY, ERROR};
 enum cycle_state_t{MENSTRUAL, POC, ESTROGEN, SEEKING_ESTROGEN, SEEKING_TEMP_SHIFT, SEEKING_TEMP_SHIFT_EXTEND, TEMP_SHIFT_OCCURRED, RISKY, ERROR};
@@ -44,8 +45,9 @@ typedef struct {
     enum fertility_face_state_t state;
     enum cycle_state_t cycle_next_state;
     enum cycle_state_t cycle_state;
+    enum cycle_state_t cycle_prev_state;
     watch_date_time cycle_state_start;
-    bool temp_shift_occured;
+    float historic_max_temp_f;
     
 } fertility_tracker_mem_t;
 
@@ -58,6 +60,9 @@ static bool dates_are_equal(watch_date_time time1, watch_date_time time2);
 static bool is_fertile(fertility_tracker_mem_t * data_buf);
 static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf);
 static uint16_t num_days_passed(watch_date_time date1, watch_date_time date2);
+static void enter_error_state(fertility_tracker_mem_t * data_buf);
+static float get_prev_temp(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
+static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
 
 #define fertility_tracker_face ((const watch_face_t){ \
     fertility_tracker_face_setup, \
