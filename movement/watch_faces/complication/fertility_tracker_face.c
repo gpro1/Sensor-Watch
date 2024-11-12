@@ -515,6 +515,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
 {
     bool fertility_status = true;
     watch_date_time temp_time;
+    temp_time = watch_rtc_get_date_time();
 
     switch(data_buf->cycle_state)
     {
@@ -525,7 +526,6 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
                 G = NF
                 EL/EE = F
             */
-
            if(data_buf->fluid_buf[data_buf->data_index] > 1) //EL/EE
            {
                 fertility_status = true;
@@ -536,8 +536,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
            }
            else //M
            {
-                temp_time = watch_rtc_get_date_time();
-                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 || data_buf->temp_shift_occured == true)
+                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->temp_shift_occured == true)
                 {
                     fertility_status = false;
                 }
@@ -549,23 +548,55 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
             break; 
 
         case ESTROGEN:
-            fertility_status = true;
-            //NF after 7pm if next state is seeking_estrogen
+            if(data_buf->cycle_next_state == SEEKING_ESTROGEN && temp_time.unit.hour > 17 )
+            {
+                //NF after 6pm if next state is seeking_estrogen
+                fertility_status = false;
+            }
+            else
+            {
+                fertility_status = true;
+            }
             break;
 
         case SEEKING_ESTROGEN:
             //Non-fertile unless next state != seeking_estrogen
-            fertility_status = false;
+            if(data_buf->cycle_next_state == SEEKING_ESTROGEN)
+            {
+                fertility_status = false;
+            }
+            else
+            {
+                fertility_status = true;
+            }
             break;
 
         case SEEKING_TEMP_SHIFT:
-            fertility_status = true;
-            //NF after 7pm if next state is TEMP_SHIFT_OCCURED
+
+            if(data_buf->cycle_next_state == TEMP_SHIFT_OCCURRED && temp_time.unit.hour > 17)
+            {
+                //NF after 6pm if next state is TEMP_SHIFT_OCCURED
+                fertility_status = false;
+            }
+            else
+            {
+                fertility_status = true;
+            }
+
             break;
 
         case SEEKING_TEMP_SHIFT_EXTEND:
-            fertility_status = true;
-            //NF after 7pm if next state is TEMP_SHIFT_OCCURED
+
+            if(data_buf->cycle_next_state == TEMP_SHIFT_OCCURRED && temp_time.unit.hour > 17)
+            {
+                //NF after 6pm if next state is TEMP_SHIFT_OCCURED
+                fertility_status = false;
+            }
+            else
+            {
+                fertility_status = true;
+            }
+
             break;
 
         case TEMP_SHIFT_OCCURRED:
