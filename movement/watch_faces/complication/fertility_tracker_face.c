@@ -476,7 +476,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     switch(data_buf->cycle_state)
     {
 
-        case POC:
+        case FLUID_CHANGE:
             //Next state is ESTROGEN if an EE or EL was logged today.
             if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL OR EE
             {
@@ -486,7 +486,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break; 
 
         case ESTROGEN:
-            /* Next state is SEEKING_TEMP_SHIFT if a temperature is logged today that is at least 0.2 degrees(f)
+            /* Next state is TEMP_SHIFT_DETECT if a temperature is logged today that is at least 0.2 degrees(f)
                greater than the max of the past 6 days.
 
                In case of one invalid temperature (90.00 or any temp > 99.50), this value can be skipped and the previous day is used.
@@ -501,7 +501,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
            else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
            {
                 //Move to seeking temp shift, log historic max
-                data_buf->cycle_next_state = SEEKING_TEMP_SHIFT;
+                data_buf->cycle_next_state = TEMP_SHIFT_DETECT;
                 data_buf->historic_max_temp_f = historic_max_temp_f;
            }
            //else if()
@@ -510,7 +510,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
            //Need to work out priority vs previous condition in case both conditions occur
            else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged
            {
-                data_buf->cycle_next_state = POC;
+                data_buf->cycle_next_state = FLUID_CHANGE;
            }
 
             break;
@@ -522,12 +522,12 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             }
             else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M loggeed
             {
-                data_buf->cycle_next_state = POC;
+                data_buf->cycle_next_state = FLUID_CHANGE;
             }
 
             break;
 
-        case SEEKING_TEMP_SHIFT:
+        case TEMP_SHIFT_DETECT:
             days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time);
 
             if(days_in_state >= 2)
@@ -541,20 +541,20 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 
             break;
 
-        case SEEKING_TEMP_SHIFT_EXTEND:
+        case TEMP_SHIFT_DETECT_EXTEND:
 
             break;
 
-        case TEMP_SHIFT_OCCURRED:
+        case OVULATION_CONFIRMED:
 
             break;
 
-        case RISKY:
+        case ERRATIC_TEMPS:
 
             break;
 
         case ERROR:
-            //Next state is POC when M is logged.
+            //Next state is FLUID_CHANGE when M is logged.
 
             break;
 
@@ -574,7 +574,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
 
     switch(data_buf->cycle_state)
     {
-        case POC:
+        case FLUID_CHANGE:
             /* Check today's fluid entry, return fertility status based on result.
                 First 4 days in this state if temp shift occured: M = NF 
                 else M = F
@@ -591,7 +591,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
            }
            else //M
            {
-                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->cycle_prev_state == TEMP_SHIFT_OCCURRED)
+                if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->cycle_prev_state == OVULATION_CONFIRMED)
                 {
                     fertility_status = false;
                 }
@@ -626,39 +626,35 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
             }
             break;
 
-        case SEEKING_TEMP_SHIFT:
+        case TEMP_SHIFT_DETECT:
 
-            if(data_buf->cycle_next_state == TEMP_SHIFT_OCCURRED && temp_time.unit.hour > 17)
+            fertility_status = true;
+
+            break;
+
+        case TEMP_SHIFT_DETECT_EXTEND:
+
+            fertility_status = true;
+
+            break;
+
+        case SEEKING_OVULATION:
+            if(data_buf->cycle_next_state == OVULATION_CONFIRMED && temp_time.unit.hour > 17)
             {
-                //NF after 6pm if next state is TEMP_SHIFT_OCCURED
+                //NF after 6pm if next state is OVULATION_CONFIRMED
                 fertility_status = false;
             }
             else
             {
                 fertility_status = true;
             }
-
             break;
 
-        case SEEKING_TEMP_SHIFT_EXTEND:
-
-            if(data_buf->cycle_next_state == TEMP_SHIFT_OCCURRED && temp_time.unit.hour > 17)
-            {
-                //NF after 6pm if next state is TEMP_SHIFT_OCCURED
-                fertility_status = false;
-            }
-            else
-            {
-                fertility_status = true;
-            }
-
-            break;
-
-        case TEMP_SHIFT_OCCURRED:
+        case OVULATION_CONFIRMED:
             fertility_status = false;
             break;
 
-        case RISKY:
+        case ERRATIC_TEMPS:
             fertility_status = true;
             break;
 
