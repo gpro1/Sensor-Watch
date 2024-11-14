@@ -47,8 +47,9 @@ void fertility_tracker_face_activate(movement_settings_t *settings, void *contex
 
     //Update state if a new day has arrived
     temp_time = watch_rtc_get_date_time();
-    if(!dates_are_equal(temp_time, face_buf->cycle_state_start))
+    if(!dates_are_equal(temp_time, face_buf->current_date))
     {
+        face_buf->current_date = temp_time;
         //TODO: Check for missed days, log default values
         if(face_buf->cycle_state != face_buf->cycle_next_state) //Cycle state if next state != current state
         {

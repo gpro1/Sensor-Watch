@@ -48,6 +48,7 @@ typedef struct {
     enum cycle_state_t cycle_prev_state;
     watch_date_time cycle_state_start;
     float historic_max_temp_f;
+    watch_date_time current_date;
     
 } fertility_tracker_mem_t;
 
