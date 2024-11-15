@@ -493,25 +493,25 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                In case of two invalid temperatures, both can be skipped but an extra day must be used (ie the max of 7 days).
                In case of >2 invalid temperatures, proceed to error state
             */
-           historic_max_temp_f = get_historic_max_temp_f(data_buf);
-           if(historic_max_temp_f == INVALID_TEMP)
-           {
-                enter_error_state();
-           }
-           else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
-           {
-                //Move to seeking temp shift, log historic max
-                data_buf->cycle_next_state = TEMP_SHIFT_DETECT;
-                data_buf->historic_max_temp_f = historic_max_temp_f;
-           }
-           //else if()
-           //This case is when two G has been logged for fluid
-           //Next state is seeking estrogen
-           //Need to work out priority vs previous condition in case both conditions occur
-           else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged
-           {
+            historic_max_temp_f = get_historic_max_temp_f(data_buf); 
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged
+            {
                 data_buf->cycle_next_state = FLUID_CHANGE;
-           }
+            }
+            else if(data_buf->fluid_buf[data_buf->data_index] == 2 && get_prev_fluid(1, data_buf) == 2) //Two Gs logged
+            {
+                data_buf->cycle_next_state = SEEKING_ESTROGEN;
+            }
+            else if(historic_max_temp_f == INVALID_TEMP)
+            {
+                    enter_error_state();
+            }
+            else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
+            {
+                    //Move to seeking temp shift, log historic max
+                    data_buf->cycle_next_state = TEMP_SHIFT_DETECT;
+                    data_buf->historic_max_temp_f = historic_max_temp_f;
+            }
 
             break;
 
@@ -532,20 +532,51 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 
             if(days_in_state >= 2)
             {
-                
+                if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f < 0.2f && \
+                    get_prev_temp(1, data_buf) - data_buf->historic_max_temp_f < 0.2f)
+                {
+                    //Last two days not 0.2f above historic max temp
+                    data_buf->cycle_next_state = ESTROGEN;
+                }
             }
-            else if(days_in_state >= 4)
+            
+            if(days_in_state >= 4)
             {
-
+                if(get_prev_temp(1, data_buf) - data_buf->historic_max_temp_f >= 0.2f && \
+                    get_prev_temp(2, data_buf) - data_buf->historic_max_temp_f >= 0.2f && \
+                    get_prev_temp(3, data_buf) - data_buf->historic_max_temp_f >= 0.2f)
+                {
+                    if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.4f)
+                    {
+                        //Last three days 0.2f > historic max temp and today 0.4f > historic max temp
+                        data_buf->cycle_next_state = SEEKING_OVULATION;
+                    }
+                    else if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.2f)
+                    {
+                        //Last three days 0.2f > historic max temp and today 0.2f > historic max temp (but not 0.4)
+                        data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
+                    }
+                }
             }
 
             break;
 
         case TEMP_SHIFT_DETECT_EXTEND:
 
+            if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.2f)
+            {
+                data_buf->cycle_next_state = SEEKING_OVULATION;
+            }
+            else
+            {
+                data_buf->cycle_next_state = ERRATIC_TEMPS
+            }
+
             break;
 
         case OVULATION_CONFIRMED:
+
+            
 
             break;
 
