@@ -470,6 +470,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     float historic_max_temp_f;
     watch_date_time temp_time;
     uint16_t days_in_state;
+    int i;
 
     temp_time = watch_rtc_get_date_time();
 
@@ -574,18 +575,45 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 
             break;
 
+        case SEEKING_OVULATION:
+
+            for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
+            {
+                if(get_prev_fluid(i, data_buf) > 2 &&
+                    get_prev_fluid(i - 1, data_buf) == 2 &&
+                    get_prev_fluid(i - 2, data_buf) == 2 &&
+                    get_prev_fluid(i - 3, data_buf) == 3) 
+                {
+                    //Previous EL/EE followed by 3 consecutive Gs
+                    data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                }
+            }
+            break;
+
         case OVULATION_CONFIRMED:
 
-            
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //m logged
+            {
+                data_buf->cycle_next_state = FLUID_CHANGE;
+            }
 
             break;
 
         case ERRATIC_TEMPS:
 
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //m logged
+            {
+                data_buf->cycle_next_state = FLUID_CHANGE;
+            }
+
             break;
 
         case ERROR:
             //Next state is FLUID_CHANGE when M is logged.
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //m logged
+            {
+                data_buf->cycle_next_state = FLUID_CHANGE;
+            }
 
             break;
 

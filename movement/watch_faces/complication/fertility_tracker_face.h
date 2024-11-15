@@ -28,6 +28,7 @@
 #include "movement.h"
 
 #define MEMORY_NUM_DAYS 60 //Number of days to store data
+#define NUM_EE_EL_SEARCH_DAYS 10
 #define INVALID_TEMP 90.00f
 
 enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, TEMP_ENTRY_3, TEMP_ENTRY_4, CONFIRM_ENTRY, ERROR};
