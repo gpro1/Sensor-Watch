@@ -30,9 +30,8 @@
 
 /* TODO:
 *   - Make digits flash when entering data
-*   - Handle missed days (enter invalid data)
 *   - Display cycle day number on cal screen
-*
+*   - Handle error conditions and corner cases
 *
 *
 *
@@ -375,38 +374,6 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             
             break;
 
-        case EVENT_ALARM_LONG_PRESS:
-            switch(face_buf->state)
-            {
-                case CALENDAR:
-                break;
-
-                case FLUID_ENTRY:
-                break;
-
-                case TEMP_ENTRY_1:
-                break;
-
-                case TEMP_ENTRY_2:
-                break;
-
-                case TEMP_ENTRY_3:
-                break;
-
-                case TEMP_ENTRY_4: 
-                break;
-
-                case CONFIRM_ENTRY:
-                break;
-
-                case ERROR:
-                break;
-
-                default:
-                break;
-            }
-            break;
-
         case EVENT_TICK:
             switch(face_buf->state)
             {
@@ -423,13 +390,9 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     
                     watch_display_string("  ",0);
                     break;
-                
-                /*case DATA_ENTRY:
-                    watch_display_string("Data",4);
-                    break;*/
 
                 default:
-                    //watch_clear_display();
+
                     break;
             }
 
@@ -492,7 +455,7 @@ static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 //Run every time data is entered. Apply next state once per day
 static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 {
-    enum cycle_state_t next_state = data_buf->cycle_state;
+    enum cycle_state_t next_state = data_buf->cycle_next_state;
     float historic_max_temp_f;
     watch_date_time temp_time;
     uint16_t days_in_state;
@@ -836,4 +799,49 @@ static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * 
     }
     
     return(data_buf->fluid_buf[index]);
+}
+
+/*Max of previous 6 days if all valid temps
+Max of previous 6 days (ignoring invalid temp) if one invalid temp was logged.
+Max of previous 7 days (ignoring two invalid temps) if two invalid temps were logged.
+Error condition if more than two invalid temps
+*/
+static float get_historic_max_temp_f(fertility_tracker_mem_t * data_buf)
+{
+    uint8_t i;
+    uint8_t invalid_temp_cnt = 0;
+    float max = 0.0f;
+    float temp;
+
+    for(i = 0; i < 6; i++)
+    {
+        temp = get_prev_temp((i + 1), data_buf);
+        if(temp <= INVALID_TEMP || temp >= FEVER_TEMP)
+        {
+            invalid_temp_cnt++;
+            if(invalid_temp_cnt > 2)
+            {
+                return INVALID_TEMP;
+            }
+        }
+        else if(temp > max)
+        {
+            max = temp;
+        }
+    }
+
+    if(invalid_temp_cnt == 2)
+    {
+        temp = get_prev_temp(7, data_buf);
+        if(temp <= INVALID_TEMP || temp >= FEVER_TEMP)
+        {
+            return INVALID_TEMP;
+        }
+        else if(temp > max)
+        {
+            max = temp;
+        }
+    }
+
+    return(max);
 }

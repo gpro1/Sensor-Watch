@@ -30,6 +30,7 @@
 #define MEMORY_NUM_DAYS 60 //Number of days to store data
 #define NUM_EE_EL_SEARCH_DAYS 10
 #define INVALID_TEMP 90.00f
+#define FEVER_TEMP 100.40f
 
 enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, TEMP_ENTRY_3, TEMP_ENTRY_4, CONFIRM_ENTRY, ERROR};
 enum cycle_state_t{FLUID_CHANGE, ESTROGEN, SEEKING_ESTROGEN, TEMP_SHIFT_DETECT, TEMP_SHIFT_DETECT_EXTEND, SEEKING_OVULATION, OVULATION_CONFIRMED, ERRATIC_TEMPS, ERROR};
@@ -65,6 +66,7 @@ static uint16_t num_days_passed(watch_date_time date1, watch_date_time date2);
 static void enter_error_state(fertility_tracker_mem_t * data_buf);
 static float get_prev_temp(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
 static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
+static float get_historic_max_temp_f(fertility_tracker_mem_t * data_buf);
 
 #define fertility_tracker_face ((const watch_face_t){ \
     fertility_tracker_face_setup, \
