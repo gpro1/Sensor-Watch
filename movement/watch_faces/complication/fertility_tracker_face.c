@@ -32,7 +32,7 @@
 *   - Make digits flash when entering data
 *   - Display cycle day number on cal screen
 *   - Handle error conditions and corner cases
-*
+*   - In case of transition from TEMP_SHIFT_DETECT back to ESTROGEN, overwrite the temp that caused entry into TEMP SHIFT DETECT in the first place (with INVALID_TEMP)
 *
 *
 *
