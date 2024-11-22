@@ -569,9 +569,9 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
             {
                 if(get_prev_fluid(i, data_buf) > 2 &&
-                    get_prev_fluid(i - 1, data_buf) == 2 &&
-                    get_prev_fluid(i - 2, data_buf) == 2 &&
-                    get_prev_fluid(i - 3, data_buf) == 3) 
+                    get_prev_fluid(i + 1, data_buf) == 2 &&
+                    get_prev_fluid(i + 2, data_buf) == 2 &&
+                    get_prev_fluid(i + 3, data_buf) == 2) 
                 {
                     //Previous EL/EE followed by 3 consecutive Gs
                     data_buf->cycle_next_state = OVULATION_CONFIRMED;
@@ -637,7 +637,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
            {
                 fertility_status = false;
            }
-           else //M
+           else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M
            {
                 if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->cycle_prev_state == OVULATION_CONFIRMED)
                 {
@@ -647,6 +647,10 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
                 {
                     fertility_status = true;
                 }
+           }
+           else
+           {
+                fertility_status = true;
            }
             break; 
 
