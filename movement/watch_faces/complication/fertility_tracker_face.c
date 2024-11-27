@@ -494,7 +494,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             }
             else if(historic_max_temp_f == INVALID_TEMP)
             {
-                    enter_error_state();
+                    enter_error_state(data_buf);
             }
             else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
             {
@@ -559,7 +559,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             }
             else
             {
-                data_buf->cycle_next_state = ERRATIC_TEMPS
+                data_buf->cycle_next_state = ERRATIC_TEMPS;
             }
 
             break;
@@ -719,7 +719,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
             break;
     }
 
-    return true;
+    return fertility_status;
 
 }
 
@@ -779,7 +779,7 @@ static float get_prev_temp(uint16_t num_days_prev, fertility_tracker_mem_t * dat
     uint16_t index;
     if(num_days_prev > data_buf->data_index)
     {
-        index = MEMORY_NUM_DAYS - (num_days_prev - data_buf->data_index)
+        index = MEMORY_NUM_DAYS - (num_days_prev - data_buf->data_index);
     }
     else
     {
@@ -795,7 +795,7 @@ static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * 
     uint16_t index;
     if(num_days_prev > data_buf->data_index)
     {
-        index = MEMORY_NUM_DAYS - (num_days_prev - data_buf->data_index)
+        index = MEMORY_NUM_DAYS - (num_days_prev - data_buf->data_index);
     }
     else
     {
