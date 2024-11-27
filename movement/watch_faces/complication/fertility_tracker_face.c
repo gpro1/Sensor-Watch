@@ -140,7 +140,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     movement_illuminate_led();
                     break;
 
-                case ERROR:
+                case STATE_ERROR:
                     movement_illuminate_led();
                     break;
 
@@ -206,7 +206,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 break;
 
-                case ERROR:
+                case STATE_ERROR:
                 break;
 
                 default:
@@ -292,7 +292,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 break;
 
-                case ERROR:
+                case STATE_ERROR:
                 break;
 
                 default:
@@ -365,7 +365,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 case CONFIRM_ENTRY:
                 break;
 
-                case ERROR:
+                case STATE_ERROR:
                 break;
 
                 default:
