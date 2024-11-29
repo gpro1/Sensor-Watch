@@ -54,6 +54,9 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
 {
     (void) settings; //silence error that settings is unused
+    (void) context;
+
+    /*
     fertility_tracker_mem_t * face_buf = (fertility_tracker_mem_t *) context;
     watch_date_time temp_time;
     uint16_t num_days_missed;
@@ -83,7 +86,7 @@ void fertility_tracker_face_activate(movement_settings_t *settings, void *contex
             face_buf->cycle_state = face_buf->cycle_next_state;
             face_buf->cycle_state_start = temp_time;
         }
-    }
+    }*/
 }
 
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context)
@@ -92,8 +95,39 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
     fertility_tracker_mem_t *face_buf= (fertility_tracker_mem_t *) context;
     watch_date_time temp_time;
     char buf[6];
+    uint16_t num_days_missed;
+    uint16_t i;
     switch(event.event_type)
     {
+        case EVENT_ACTIVATE:
+
+            //Update state if a new day has arrived
+            temp_time = watch_rtc_get_date_time();
+            if(!dates_are_equal(temp_time, face_buf->current_date))
+            {
+
+                //Check for missed days, log invalid data
+                //Also, pre-populate today with invalid data in case it is missed
+                num_days_missed = num_days_passed(temp_time, face_buf->current_date);
+                for(i = 0; i < num_days_missed; i++)
+                {
+                    face_buf->data_index++;
+                    face_buf->fluid_buf[face_buf->data_index] = 0; 
+                    face_buf->temp_buf[face_buf->data_index] = INVALID_TEMP;
+                }
+
+                face_buf->current_date = temp_time;
+                
+                //Update the state based on next state
+                if(face_buf->cycle_state != face_buf->cycle_next_state) 
+                {
+                    face_buf->cycle_prev_state = face_buf->cycle_state;
+                    face_buf->cycle_state = face_buf->cycle_next_state;
+                    face_buf->cycle_state_start = temp_time;
+                }
+            }
+            break;
+
         case EVENT_MODE_BUTTON_UP:
             movement_move_to_next_face();
             break;
