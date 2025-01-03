@@ -46,9 +46,10 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
     if(*context_ptr == NULL)
     {
         *context_ptr = malloc(sizeof(fertility_tracker_mem_t));
-        memset(context_ptr, 0, sizeof(fertility_tracker_mem_t));
+        memset(*context_ptr, 0, sizeof(fertility_tracker_mem_t));
     } 
-    ((fertility_tracker_mem_t*)context_ptr)->state = CALENDAR;
+    ((fertility_tracker_mem_t*)*context_ptr)->state = CALENDAR;
+    ((fertility_tracker_mem_t*)*context_ptr)->current_date = watch_rtc_get_date_time();
 }
 
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
@@ -97,6 +98,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
     char buf[6];
     uint16_t num_days_missed;
     uint16_t i;
+    
     switch(event.event_type)
     {
         case EVENT_ACTIVATE:
@@ -135,11 +137,6 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
         case EVENT_TIMEOUT:
             face_buf->state = CALENDAR;
             movement_move_to_face(0);
-            break;
-
-        case EVENT_ACTIVATE:
-            watch_display_string(" CAL ",4);
-            watch_display_string("  ",0);
             break;
 
         case EVENT_LIGHT_BUTTON_DOWN:

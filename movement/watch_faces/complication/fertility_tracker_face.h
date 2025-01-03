@@ -58,6 +58,7 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context);
 bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *settings, void *context);
 void fertility_tracker_face_resign(movement_settings_t *settings, void *context);
+
 static void display_fluid_type(uint8_t value);
 static bool dates_are_equal(watch_date_time time1, watch_date_time time2);
 static bool is_fertile(fertility_tracker_mem_t * data_buf);

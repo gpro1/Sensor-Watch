@@ -29,13 +29,13 @@
 
 const watch_face_t watch_faces[] = {
     simple_clock_face,
+    fertility_tracker_face,
     world_clock_face,
     sunrise_sunset_face,
     moon_phase_face,
     stopwatch_face,
     preferences_face,
     set_time_face,
-    fertility_tracker_face,
     thermistor_readout_face,
     voltage_face
 };
