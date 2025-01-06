@@ -93,7 +93,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 {
                     if(face_buf->cycle_next_state == FLUID_CHANGE)
                     {
-                        face_buf->cycle_day_num = 1;
+                        //Second day of cycle because M was logged yesterday.
+                        face_buf->cycle_day_num = 2;
                     }
                     face_buf->cycle_prev_state = face_buf->cycle_state;
                     face_buf->cycle_state = face_buf->cycle_next_state;
@@ -381,7 +382,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     }
                     
                     watch_display_string("  ",0);
-                    watch_display_string("%2hu", face_buf->cycle_day_num, 2);
+                    snprintf(buf, sizeof(buf), "%2hu", face_buf->cycle_day_num);
+                    watch_display_string(buf, 2);
 
                     break;
 
