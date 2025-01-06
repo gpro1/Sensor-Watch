@@ -137,6 +137,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             break;
 
         case EVENT_MODE_BUTTON_UP:
+            face_buf->state = CALENDAR;
             movement_move_to_next_face();
             break;
 
