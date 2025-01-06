@@ -51,6 +51,7 @@ typedef struct {
     watch_date_time cycle_state_start;
     float historic_max_temp_f;
     watch_date_time current_date;
+    float * first_high_temp;
     
 } fertility_tracker_mem_t;
 
