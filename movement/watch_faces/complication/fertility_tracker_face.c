@@ -98,7 +98,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
     char buf[6];
     uint16_t num_days_missed;
     uint16_t i;
-    uint8_t display_flash;
+    static uint8_t display_flash = 0;
     
     switch(event.event_type)
     {
