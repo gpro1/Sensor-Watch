@@ -98,6 +98,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
     char buf[6];
     uint16_t num_days_missed;
     uint16_t i;
+    uint8_t display_flash;
     
     switch(event.event_type)
     {
@@ -426,6 +427,76 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     
                     watch_display_string("  ",0);
                     break;
+
+                case TEMP_ENTRY_1:
+
+                    if(display_flash == 0)
+                    {
+                        display_flash = 1;
+                        snprintf(buf, sizeof(buf), "  %hu%hu%hu", face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+                    else
+                    {
+                        display_flash = 0;
+                        snprintf(buf, sizeof(buf), "%2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+
+                    break;
+
+                case TEMP_ENTRY_2:
+
+                    if(display_flash == 0)
+                    {
+                        display_flash = 1;
+                        snprintf(buf, sizeof(buf), "%2hu %hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[2], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+                    else
+                    {
+                        display_flash = 0;
+                        snprintf(buf, sizeof(buf), "%2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+
+                    break;
+
+                case TEMP_ENTRY_3:
+
+                    if(display_flash == 0)
+                    {
+                        display_flash = 1;
+                        snprintf(buf, sizeof(buf), "%2hu%hu %hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+                    else
+                    {
+                        display_flash = 0;
+                        snprintf(buf, sizeof(buf), "%2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+
+                    break;
+
+                case TEMP_ENTRY_4:
+
+                    if(display_flash == 0)
+                    {
+                        display_flash = 1;
+                        snprintf(buf, sizeof(buf), "%2hu%hu%hu ", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2]);
+                        watch_display_string(buf, 4);
+                    }
+                    else
+                    {
+                        display_flash = 0;
+                        snprintf(buf, sizeof(buf), "%2hu%hu%hu%hu", (uint8_t)(face_buf->temp_input[0]/10), face_buf->temp_input[1], face_buf->temp_input[2], face_buf->temp_input[3]);
+                        watch_display_string(buf, 4);
+                    }
+
+                    break;
+
+
 
                 default:
 
