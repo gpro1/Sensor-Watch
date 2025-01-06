@@ -76,9 +76,14 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 num_days_missed = num_days_passed(temp_time, face_buf->current_date);
                 for(i = 0; i < num_days_missed; i++)
                 {
-                    face_buf->data_index++;
+                    face_buf->data_index++;                                    
+                    if(face_buf->data_index >= MEMORY_NUM_DAYS)
+                    {
+                        face_buf->data_index = 0;
+                    }
                     face_buf->fluid_buf[face_buf->data_index] = 0; 
                     face_buf->temp_buf[face_buf->data_index] = INVALID_TEMP;
+                    face_buf->cycle_day_num++;
                 }
 
                 face_buf->current_date = temp_time;
@@ -86,6 +91,10 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 //Update the state based on next state
                 if(face_buf->cycle_state != face_buf->cycle_next_state) 
                 {
+                    if(face_buf->cycle_next_state == FLUID_CHANGE)
+                    {
+                        face_buf->cycle_day_num = 1;
+                    }
                     face_buf->cycle_prev_state = face_buf->cycle_state;
                     face_buf->cycle_state = face_buf->cycle_next_state;
                     face_buf->cycle_state_start = temp_time;
@@ -308,38 +317,20 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     
                     temp_time = watch_rtc_get_date_time();
     
-                    //increment data index if it is a new day, reset input buffers
-                    if(dates_are_equal(temp_time, face_buf->time_buf[face_buf->data_index]) != true)
+                    //Set input buffers to current data (default values if new day)
+                    face_buf->fluid_input = face_buf->fluid_buf[face_buf->data_index];
+                    if(face_buf->temp_buf[face_buf->data_index] >= 100.0)
                     {
-                        face_buf->data_index++;
-                        if(face_buf->data_index >= MEMORY_NUM_DAYS)
-                        {
-                            face_buf->data_index = 0;
-                        }
-                        face_buf->fluid_input = 1;
-                        face_buf->temp_input[0] = 90;
-                        face_buf->temp_input[1] = 0;
-                        face_buf->temp_input[2] = 0;
-                        face_buf->temp_input[3] = 0;
-                        face_buf->time_input = temp_time;
+                        face_buf->temp_input[0] = 100;
                     }
                     else
                     {
-                        //Set input buffers to previous entry (with updated time)
-                        face_buf->fluid_input = face_buf->fluid_buf[face_buf->data_index];
-                        if(face_buf->temp_buf[face_buf->data_index] >= 100.0)
-                        {
-                            face_buf->temp_input[0] = 100;
-                        }
-                        else
-                        {
-                            face_buf->temp_input[0] = 90;
-                        }
-                        face_buf->temp_input[1] = ((uint8_t)face_buf->temp_buf[face_buf->data_index] % 10);     
-                        face_buf->temp_input[2] = ((uint8_t)(face_buf->temp_buf[face_buf->data_index] * 10) % 10);
-                        face_buf->temp_input[3] = (uint8_t)((uint16_t)round(face_buf->temp_buf[face_buf->data_index] * 100) % 10);
-                        face_buf->time_input = temp_time;
+                        face_buf->temp_input[0] = 90;
                     }
+                    face_buf->temp_input[1] = ((uint8_t)face_buf->temp_buf[face_buf->data_index] % 10);     
+                    face_buf->temp_input[2] = ((uint8_t)(face_buf->temp_buf[face_buf->data_index] * 10) % 10);
+                    face_buf->temp_input[3] = (uint8_t)((uint16_t)round(face_buf->temp_buf[face_buf->data_index] * 100) % 10);
+                    face_buf->time_input = temp_time;
                    
                     watch_display_string("FL",0);
                     display_fluid_type(face_buf->fluid_input);
@@ -389,6 +380,8 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     }
                     
                     watch_display_string("  ",0);
+                    watch_display_string("%2hu", face_buf->cycle_day_num);
+
                     break;
 
                 case TEMP_ENTRY_1:
