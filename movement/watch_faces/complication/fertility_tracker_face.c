@@ -333,6 +333,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     face_buf->time_input = temp_time;
                    
                     watch_display_string("FL",0);
+                    watch_display_string("  ",2);
                     display_fluid_type(face_buf->fluid_input);
 
                     face_buf->state = FLUID_ENTRY;
@@ -380,7 +381,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     }
                     
                     watch_display_string("  ",0);
-                    watch_display_string("%2hu", face_buf->cycle_day_num);
+                    watch_display_string("%2hu", face_buf->cycle_day_num, 2);
 
                     break;
 
