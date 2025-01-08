@@ -223,7 +223,7 @@ static int fert_test_cmd(int argc, char *argv[])
             fertile = 'N';
         }
 
-        printf("%hu : %c : %u \r\n", face_buf->cycle_day_num, fertile, face_buf->cycle_state);
+        printf("%hu : %c : %hu \r\n", face_buf->cycle_day_num, fertile, (uint8_t)face_buf->cycle_state);
 
         //Calculate new date (years not supported)
         temp_time.unit.day++;
