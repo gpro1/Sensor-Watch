@@ -97,7 +97,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     }
                     if(face_buf->cycle_state == TEMP_SHIFT_DETECT && face_buf->cycle_next_state == ESTROGEN)
                     {
-                        *(data_buf->first_high_temp) = INVALID_TEMP;
+                        *(face_buf->first_high_temp) = INVALID_TEMP;
                     }
                     face_buf->cycle_prev_state = face_buf->cycle_state;
                     face_buf->cycle_state = face_buf->cycle_next_state;
