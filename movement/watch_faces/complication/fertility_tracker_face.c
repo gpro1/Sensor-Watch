@@ -31,7 +31,6 @@
 /* TODO:
 *   - Handle error conditions and corner cases
 *
-*   -Rewrite temp_shift_detect as per new diagram
 *   -Rewrite ovulation confirmed as per new diagram (also subtract get_prev_fluid is going in wrong direction)
 */
 
@@ -530,6 +529,8 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     watch_date_time temp_time;
     uint16_t days_in_state;
     int i;
+    uint8_t num_outliers;
+    float temp_temp;
 
     temp_time = watch_rtc_get_date_time();
 
@@ -589,35 +590,38 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break;
 
         case TEMP_SHIFT_DETECT:
-            days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time);
+            days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time) + 1;
 
-            if(days_in_state >= 2)
+            for(i = 0; i < days_in_state; i++)
             {
-                if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f < 0.2f && \
-                    get_prev_temp(1, data_buf) - data_buf->historic_max_temp_f < 0.2f)
+                temp_temp = get_prev_temp(i + 1, data_buf);
+                if(temp_temp == INVALID_TEMP || temp_temp >= FEVER_TEMP || (temp_temp - data_buf->historic_max_temp_f) < 0.2f)
                 {
-                    //Last two days not 0.2f above historic max temp
-                    data_buf->cycle_next_state = ESTROGEN;
-                    
+                    num_outliers++;
                 }
             }
-            
-            if(days_in_state >= 4)
+
+            if(num_outliers >= 2)
             {
-                if(get_prev_temp(1, data_buf) - data_buf->historic_max_temp_f >= 0.2f && \
-                    get_prev_temp(2, data_buf) - data_buf->historic_max_temp_f >= 0.2f && \
-                    get_prev_temp(3, data_buf) - data_buf->historic_max_temp_f >= 0.2f)
+                //two days not 0.2f above historic max temp or invalid
+                data_buf->cycle_next_state = ESTROGEN;
+            }
+            else if(days_in_state - num_outliers >= 3)
+            {
+                temp_temp = data_buf->temp_buf[data_buf->data_index];
+                if(temp_temp == INVALID_TEMP || temp_temp >= FEVER_TEMP || (temp_temp - data_buf->historic_max_temp_f) < 0.2f)
                 {
-                    if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.4f)
-                    {
-                        //Last three days 0.2f > historic max temp and today 0.4f > historic max temp
-                        data_buf->cycle_next_state = SEEKING_OVULATION;
-                    }
-                    else if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.2f)
-                    {
-                        //Last three days 0.2f > historic max temp and today 0.2f > historic max temp (but not 0.4)
-                        data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
-                    }
+                    //Outlier, do nothing
+                }
+                else if((temp_temp - data_buf->historic_max_temp_f) >= 0.4f)
+                {
+                    //Temp shift detect successful!
+                    data_buf->cycle_next_state = SEEKING_OVULATION;
+                }
+                else
+                {
+                    //Extend temp shift detect
+                    data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
                 }
             }
 
