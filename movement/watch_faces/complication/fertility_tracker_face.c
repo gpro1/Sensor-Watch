@@ -31,7 +31,6 @@
 /* TODO:
 *   - Handle error conditions and corner cases
 *
-*   -*(data_buf->first_high_temp) = INVALID_TEMP; Move this to when the state actually changes (Activate event)
 *   -Rewrite temp_shift_detect as per new diagram
 *   -Rewrite ovulation confirmed as per new diagram (also subtract get_prev_fluid is going in wrong direction)
 */
@@ -97,6 +96,10 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     {
                         //Second day of cycle because M was logged yesterday.
                         face_buf->cycle_day_num = 2;
+                    }
+                    if(face_buf->cycle_state == TEMP_SHIFT_DETECT && face_buf->cycle_next_state == ESTROGEN)
+                    {
+                        *(data_buf->first_high_temp) = INVALID_TEMP;
                     }
                     face_buf->cycle_prev_state = face_buf->cycle_state;
                     face_buf->cycle_state = face_buf->cycle_next_state;
@@ -595,7 +598,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                 {
                     //Last two days not 0.2f above historic max temp
                     data_buf->cycle_next_state = ESTROGEN;
-                    *(data_buf->first_high_temp) = INVALID_TEMP;
+                    
                 }
             }
             
