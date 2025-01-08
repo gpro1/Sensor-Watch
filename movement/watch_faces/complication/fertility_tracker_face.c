@@ -31,7 +31,6 @@
 /* TODO:
 *   - Handle error conditions and corner cases
 *
-*   -Rewrite ovulation confirmed as per new diagram (also subtract get_prev_fluid is going in wrong direction)
 */
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
@@ -531,6 +530,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     int i;
     uint8_t num_outliers;
     float temp_temp;
+    uint8_t el_ee_index = 0;
 
     temp_time = watch_rtc_get_date_time();
 
@@ -644,15 +644,29 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 
             for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
             {
-                if(get_prev_fluid(i, data_buf) > 2 &&
-                    get_prev_fluid(i + 1, data_buf) == 2 &&
-                    get_prev_fluid(i + 2, data_buf) == 2 &&
-                    get_prev_fluid(i + 3, data_buf) == 2) 
+                if(get_prev_fluid(i, data_buf) > 2)
                 {
-                    //Previous EL/EE followed by 3 consecutive Gs
-                    data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                    //EL or EE found
+                    el_ee_index = i;
+                    break;
                 }
             }
+
+            if(el_ee_index > 0)
+            {
+                for(i = el_ee_index ; i > 2; i--)
+                {
+                    if( get_prev_fluid(i - 1, data_buf) == 2 &&
+                        get_prev_fluid(i - 2, data_buf) == 2 &&
+                        get_prev_fluid(i - 3, data_buf) == 2) 
+                    {
+                        //Previous EL/EE followed by 3 consecutive Gs
+                        data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                        break;
+                    }
+                }
+            }
+
             break;
 
         case OVULATION_CONFIRMED:
