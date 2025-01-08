@@ -211,7 +211,7 @@ static int fert_test_cmd(int argc, char *argv[])
         face_buf->fluid_buf[face_buf->data_index] = fl_data[i];
         face_buf->temp_buf[face_buf->data_index] = temp_data[i];
         face_buf->time_buf[face_buf->data_index] = watch_rtc_get_date_time();
-        face_buf->cycle_next_state = iterate_cycle_fsm(face_buf);
+        iterate_cycle_fsm(face_buf);
 
         //Calculate fertility and print
         if(is_fertile(face_buf))

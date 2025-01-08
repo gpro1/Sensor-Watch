@@ -202,7 +202,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
                         face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input[0] + face_buf->temp_input[1] + (0.1 * face_buf->temp_input[2]) + (0.01 * face_buf->temp_input[3]);
                         face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
-                        face_buf->cycle_next_state = iterate_cycle_fsm(face_buf);
+                        face_buf->cycle_next_state = iterate_cycle_fsm(face_buf); //TODO: dont assign the state here, just run fxn 
                     }
 
                     if(is_fertile(face_buf))
@@ -523,7 +523,7 @@ bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 //Run every time data is entered. Apply next state once per day
 enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 {
-    enum cycle_state_t next_state = data_buf->cycle_next_state;
+    //enum cycle_state_t next_state = data_buf->cycle_next_state;
     float historic_max_temp_f;
     watch_date_time temp_time;
     uint16_t days_in_state;
@@ -680,7 +680,7 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 
             break;
     }
-    return(next_state);
+    return(data_buf->cycle_next_state);
 }
 
 //Can be called any time the fsm has been iterated or any time watch face is entered
