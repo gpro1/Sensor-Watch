@@ -98,6 +98,10 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         //Second day of cycle because M was logged yesterday.
                         face_buf->cycle_day_num = 2;
                     }
+                    if(face_buf->cycle_state == TEMP_SHIFT_DETECT && face_buf->cycle_next_state == ESTROGEN)
+                    {
+                        *(data_buf->first_high_temp) = INVALID_TEMP;
+                    }
                     face_buf->cycle_prev_state = face_buf->cycle_state;
                     face_buf->cycle_state = face_buf->cycle_next_state;
                     face_buf->cycle_state_start = temp_time;
@@ -202,7 +206,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
                         face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input[0] + face_buf->temp_input[1] + (0.1 * face_buf->temp_input[2]) + (0.01 * face_buf->temp_input[3]);
                         face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
-                        face_buf->cycle_next_state = iterate_cycle_fsm(face_buf); //TODO: dont assign the state here, just run fxn 
+                        iterate_cycle_fsm(face_buf);
                     }
 
                     if(is_fertile(face_buf))
@@ -523,11 +527,13 @@ bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 //Run every time data is entered. Apply next state once per day
 enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 {
-    //enum cycle_state_t next_state = data_buf->cycle_next_state;
     float historic_max_temp_f;
     watch_date_time temp_time;
     uint16_t days_in_state;
     int i;
+    uint8_t num_outliers;
+    float temp_temp;
+    uint8_t el_ee_index = 0;
 
     temp_time = watch_rtc_get_date_time();
 
@@ -587,37 +593,38 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break;
 
         case TEMP_SHIFT_DETECT:
-            days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time);
+            days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time) + 1;
 
-            //TODO: Rewrite as per the new updated state chart 
-
-            if(days_in_state >= 2)
+            for(i = 0; i < days_in_state; i++)
             {
-                if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f < 0.2f && \
-                    get_prev_temp(1, data_buf) - data_buf->historic_max_temp_f < 0.2f)
+                temp_temp = get_prev_temp(i + 1, data_buf);
+                if(temp_temp == INVALID_TEMP || temp_temp >= FEVER_TEMP || (temp_temp - data_buf->historic_max_temp_f) < 0.2f)
                 {
-                    //Last two days not 0.2f above historic max temp
-                    data_buf->cycle_next_state = ESTROGEN;
-                    *(data_buf->first_high_temp) = INVALID_TEMP; //TODO: Remove this! Already done somewhere else
+                    num_outliers++;
                 }
             }
-            
-            if(days_in_state >= 4)
+
+            if(num_outliers >= 2)
             {
-                if(get_prev_temp(1, data_buf) - data_buf->historic_max_temp_f >= 0.2f && \
-                    get_prev_temp(2, data_buf) - data_buf->historic_max_temp_f >= 0.2f && \
-                    get_prev_temp(3, data_buf) - data_buf->historic_max_temp_f >= 0.2f)
+                //two days not 0.2f above historic max temp or invalid
+                data_buf->cycle_next_state = ESTROGEN;
+            }
+            else if(days_in_state - num_outliers >= 3)
+            {
+                temp_temp = data_buf->temp_buf[data_buf->data_index];
+                if(temp_temp == INVALID_TEMP || temp_temp >= FEVER_TEMP || (temp_temp - data_buf->historic_max_temp_f) < 0.2f)
                 {
-                    if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.4f)
-                    {
-                        //Last three days 0.2f > historic max temp and today 0.4f > historic max temp
-                        data_buf->cycle_next_state = SEEKING_OVULATION;
-                    }
-                    else if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.2f)
-                    {
-                        //Last three days 0.2f > historic max temp and today 0.2f > historic max temp (but not 0.4)
-                        data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
-                    }
+                    //Outlier, do nothing
+                }
+                else if((temp_temp - data_buf->historic_max_temp_f) >= 0.4f)
+                {
+                    //Temp shift detect successful!
+                    data_buf->cycle_next_state = SEEKING_OVULATION;
+                }
+                else
+                {
+                    //Extend temp shift detect
+                    data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
                 }
             }
 
@@ -640,15 +647,29 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             //TODO: Change + to - in these conditions
             for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
             {
-                if(get_prev_fluid(i, data_buf) > 2 &&
-                    get_prev_fluid(i + 1, data_buf) == 2 &&
-                    get_prev_fluid(i + 2, data_buf) == 2 &&
-                    get_prev_fluid(i + 3, data_buf) == 2) 
+                if(get_prev_fluid(i, data_buf) > 2)
                 {
-                    //Previous EL/EE followed by 3 consecutive Gs
-                    data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                    //EL or EE found
+                    el_ee_index = i;
+                    break;
                 }
             }
+
+            if(el_ee_index > 0)
+            {
+                for(i = el_ee_index ; i > 2; i--)
+                {
+                    if( get_prev_fluid(i - 1, data_buf) == 2 &&
+                        get_prev_fluid(i - 2, data_buf) == 2 &&
+                        get_prev_fluid(i - 3, data_buf) == 2) 
+                    {
+                        //Previous EL/EE followed by 3 consecutive Gs
+                        data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                        break;
+                    }
+                }
+            }
+
             break;
 
         case OVULATION_CONFIRMED:
