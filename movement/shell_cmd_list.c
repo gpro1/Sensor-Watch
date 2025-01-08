@@ -197,6 +197,7 @@ static int fert_test_cmd(int argc, char *argv[])
     int i;
     char fertile;
     watch_date_time temp_time;
+    uint16_t num_days_missed;
 
     face_buf->cycle_day_num = 1;
     face_buf->current_date = watch_rtc_get_date_time();
