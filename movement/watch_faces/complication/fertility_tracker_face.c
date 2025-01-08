@@ -29,7 +29,6 @@
 #include "watch_utility.h"
 
 /* TODO:
-*   - Display cycle day number on cal screen
 *   - Handle error conditions and corner cases
 *
 */

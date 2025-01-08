@@ -106,6 +106,13 @@ shell_command_t g_shell_commands[] = {
         .max_args = 2,
         .cb = stress_cmd,
     },
+    {
+        .name = "fert_test",
+        .help = "enable a test of the fertility watch face; usage: fert_test",
+        .min_args = 0,
+        .max_args = 0,
+        .cb = fert_test_cmd,
+    },
 };
 
 const size_t g_num_shell_commands = sizeof(g_shell_commands) / sizeof(shell_command_t);
@@ -162,4 +169,9 @@ static int stress_cmd(int argc, char *argv[]) {
     }
 
     return 0;
+}
+
+static int fert_test_cmd(int argc, char *argv[])
+{
+    printf("Testing!\r\n");
 }
