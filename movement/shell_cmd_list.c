@@ -195,6 +195,7 @@ static int fert_test_cmd(int argc, char *argv[])
 {
     fertility_tracker_mem_t * face_buf = get_fert_data();
     int i;
+    int j;
     char fertile;
     watch_date_time temp_time;
     uint16_t num_days_missed;
@@ -241,7 +242,7 @@ static int fert_test_cmd(int argc, char *argv[])
             //Check for missed days, log invalid data
             //Also, pre-populate today with invalid data in case it is missed
             num_days_missed = num_days_passed(temp_time, face_buf->current_date);
-            for(i = 0; i < num_days_missed; i++)
+            for(j = 0; j < num_days_missed; j++)
             {
                 face_buf->data_index++;                                    
                 if(face_buf->data_index >= MEMORY_NUM_DAYS)
