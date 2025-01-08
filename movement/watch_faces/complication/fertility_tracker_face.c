@@ -589,6 +589,8 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
         case TEMP_SHIFT_DETECT:
             days_in_state = num_days_passed(data_buf->cycle_state_start, temp_time);
 
+            //TODO: Rewrite as per the new updated state chart 
+
             if(days_in_state >= 2)
             {
                 if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f < 0.2f && \
@@ -596,7 +598,7 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                 {
                     //Last two days not 0.2f above historic max temp
                     data_buf->cycle_next_state = ESTROGEN;
-                    *(data_buf->first_high_temp) = INVALID_TEMP;
+                    *(data_buf->first_high_temp) = INVALID_TEMP; //TODO: Remove this! Already done somewhere else
                 }
             }
             
@@ -635,7 +637,7 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break;
 
         case SEEKING_OVULATION:
-
+            //TODO: Change + to - in these conditions
             for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
             {
                 if(get_prev_fluid(i, data_buf) > 2 &&
