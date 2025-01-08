@@ -511,7 +511,7 @@ static void display_fluid_type(uint8_t value)
 }
 
 //Compares the date of both arguments. Returns true if they have the same date, otherwise false.
-static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
+bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 {
     bool result;
     result = (time1.unit.month == time2.unit.month);

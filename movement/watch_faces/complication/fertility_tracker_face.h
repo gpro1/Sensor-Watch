@@ -62,7 +62,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 void fertility_tracker_face_resign(movement_settings_t *settings, void *context);
 
 static void display_fluid_type(uint8_t value);
-static bool dates_are_equal(watch_date_time time1, watch_date_time time2);
+bool dates_are_equal(watch_date_time time1, watch_date_time time2);
 bool is_fertile(fertility_tracker_mem_t * data_buf);
 enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf);
 uint16_t num_days_passed(watch_date_time date1, watch_date_time date2);
