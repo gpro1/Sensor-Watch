@@ -33,6 +33,8 @@
 *
 */
 
+fertility_tracker_mem_t * mem_buf;
+
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
     (void) settings; //silence error that settings is unused
@@ -43,6 +45,7 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
     } 
     ((fertility_tracker_mem_t*)*context_ptr)->state = CALENDAR;
     ((fertility_tracker_mem_t*)*context_ptr)->current_date = watch_rtc_get_date_time();
+    mem_buf = *context_ptr;
 }
 
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
@@ -518,7 +521,7 @@ static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 }
 
 //Run every time data is entered. Apply next state once per day
-static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
+enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 {
     enum cycle_state_t next_state = data_buf->cycle_next_state;
     float historic_max_temp_f;
@@ -681,7 +684,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 }
 
 //Can be called any time the fsm has been iterated or any time watch face is entered
-static bool is_fertile(fertility_tracker_mem_t * data_buf)
+bool is_fertile(fertility_tracker_mem_t * data_buf)
 {
     bool fertility_status = true;
     watch_date_time temp_time;
@@ -915,4 +918,9 @@ static float get_historic_max_temp_f(fertility_tracker_mem_t * data_buf)
     }
 
     return(max);
+}
+
+fertility_tracker_mem_t * get_fert_data()
+{
+    return (mem_buf);
 }
