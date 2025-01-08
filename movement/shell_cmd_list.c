@@ -34,6 +34,7 @@
 static int help_cmd(int argc, char *argv[]);
 static int flash_cmd(int argc, char *argv[]);
 static int stress_cmd(int argc, char *argv[]);
+static int fert_test_cmd(int argc, char *argv[]);
 
 shell_command_t g_shell_commands[] = {
     {
@@ -174,4 +175,5 @@ static int stress_cmd(int argc, char *argv[]) {
 static int fert_test_cmd(int argc, char *argv[])
 {
     printf("Testing!\r\n");
+    return 0;
 }
