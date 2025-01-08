@@ -796,7 +796,7 @@ bool is_fertile(fertility_tracker_mem_t * data_buf)
 /*  Returns the number of days difference between the two datetime arguments.
     Does not support more than a year. Can handle new month and new year situations
 */
-static uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
+uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
 {
     uint16_t date1_ytd;
     uint16_t date2_ytd;
