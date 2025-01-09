@@ -609,7 +609,7 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                 //two days not 0.2f above historic max temp or invalid
                 data_buf->cycle_next_state = ESTROGEN;
             }
-            else if(days_in_state - num_outliers >= 3)
+            else if(days_in_state - num_outliers >= 2)
             {
                 temp_temp = data_buf->temp_buf[data_buf->data_index];
                 if(temp_temp == INVALID_TEMP || temp_temp >= FEVER_TEMP || (temp_temp - data_buf->historic_max_temp_f) < 0.2f)
