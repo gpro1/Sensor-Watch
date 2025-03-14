@@ -533,7 +533,8 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     int i;
     uint8_t num_outliers;
     float temp_temp;
-    uint8_t el_ee_index = 0;
+    bool ovulation_confirmed = false;
+    bool temp_shift_detected = false;
 
     temp_time = watch_rtc_get_date_time();
 
@@ -604,7 +605,11 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                 }
             }
 
-            if(num_outliers >= 2)
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged 
+            {
+                data_buf->cycle_next_state = FLUID_CHANGE;
+            }
+            else if(num_outliers >= 2)
             {
                 //two days not 0.2f above historic max temp or invalid
                 data_buf->cycle_next_state = ESTROGEN;
@@ -619,6 +624,7 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                 else if((temp_temp - data_buf->historic_max_temp_f) >= 0.4f)
                 {
                     //Temp shift detect successful!
+                    temp_shift_detected = true;
                     data_buf->cycle_next_state = SEEKING_OVULATION;
                 }
                 else
@@ -626,13 +632,41 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                     //Extend temp shift detect
                     data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
                 }
+
+                //Before moving on, double check if we should skip seeking ovulation
+                ovulation_confirmed = detect_ovulation(data_buf);
+                if(temp_shift_detected && ovulation_confirmed)
+                {
+                    //Overwrite SEEKING_OVULATION
+                    data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                }
             }
 
             break;
 
         case TEMP_SHIFT_DETECT_EXTEND:
 
-            if(data_buf->temp_buf[data_buf->data_index] - data_buf->historic_max_temp_f >= 0.2f)
+            temp_temp = data_buf->temp_buf[data_buf->data_index];
+            if(temp_temp == INVALID_TEMP || temp_temp >= FEVER_TEMP || (temp_temp - data_buf->historic_max_temp_f) < 0.2f)
+            {
+                temp_shift_detected = false;
+            }
+            else
+            {
+                temp_shift_detected = true;    
+            }
+
+            ovulation_confirmed = detect_ovulation(data_buf);
+
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged 
+            {
+                data_buf->cycle_next_state = FLUID_CHANGE;
+            }
+            else if((temp_shift_detected == true) && (ovulation_confirmed == true))
+            {
+                data_buf->cycle_next_state = OVULATION_CONFIRMED;
+            }
+            else if(temp_shift_detected == true)
             {
                 data_buf->cycle_next_state = SEEKING_OVULATION;
             }
@@ -644,30 +678,14 @@ enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break;
 
         case SEEKING_OVULATION:
-            //TODO: Change + to - in these conditions
-            for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
+            
+            if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged 
             {
-                if(get_prev_fluid(i, data_buf) > 2)
-                {
-                    //EL or EE found
-                    el_ee_index = i;
-                    break;
-                }
+                data_buf->cycle_next_state = FLUID_CHANGE;
             }
-
-            if(el_ee_index > 0)
+            else if(detect_ovulation(data_buf) == true)
             {
-                for(i = el_ee_index ; i > 2; i--)
-                {
-                    if( get_prev_fluid(i - 1, data_buf) == 2 &&
-                        get_prev_fluid(i - 2, data_buf) == 2 &&
-                        get_prev_fluid(i - 3, data_buf) == 2) 
-                    {
-                        //Previous EL/EE followed by 3 consecutive Gs
-                        data_buf->cycle_next_state = OVULATION_CONFIRMED;
-                        break;
-                    }
-                }
+                data_buf->cycle_next_state = OVULATION_CONFIRMED;
             }
 
             break;
@@ -772,15 +790,27 @@ bool is_fertile(fertility_tracker_mem_t * data_buf)
             break;
 
         case TEMP_SHIFT_DETECT:
-
-            fertility_status = true;
-
+            if(data_buf->cycle_next_state == OVULATION_CONFIRMED && temp_time.unit.hour > 17)
+            {
+                //NF after 6pm if next state is OVULATION_CONFIRMED
+                fertility_status = false;
+            }
+            else
+            {
+                fertility_status = true;
+            }
             break;
 
         case TEMP_SHIFT_DETECT_EXTEND:
-
-            fertility_status = true;
-
+            if(data_buf->cycle_next_state == OVULATION_CONFIRMED && temp_time.unit.hour > 17)
+            {
+                //NF after 6pm if next state is OVULATION_CONFIRMED
+                fertility_status = false;
+            }
+            else
+            {
+                fertility_status = true;
+            }
             break;
 
         case SEEKING_OVULATION:
@@ -941,6 +971,40 @@ static float get_historic_max_temp_f(fertility_tracker_mem_t * data_buf)
     }
 
     return(max);
+}
+
+static bool detect_ovulation(fertility_tracker_mem_t * data_buf)
+{
+    int i;
+    bool result = false;
+    uint8_t el_ee_index = 0;
+
+    for(i = 3; i <= NUM_EE_EL_SEARCH_DAYS; i++)
+    {
+        if(get_prev_fluid(i, data_buf) > 2)
+        {
+            //EL or EE found
+            el_ee_index = i;
+            break;
+        }
+    }
+
+    if(el_ee_index > 0)
+    {
+        for(i = el_ee_index ; i > 2; i--)
+        {
+            if( get_prev_fluid(i - 1, data_buf) == 2 &&
+                get_prev_fluid(i - 2, data_buf) == 2 &&
+                get_prev_fluid(i - 3, data_buf) == 2) 
+            {
+                //Previous EL/EE followed by 3 consecutive Gs
+                result = true;
+                break;
+            }
+        }
+    }
+
+    return(result);
 }
 
 fertility_tracker_mem_t * get_fert_data()

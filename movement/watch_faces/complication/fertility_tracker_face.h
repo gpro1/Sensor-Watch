@@ -70,7 +70,10 @@ static void enter_error_state(fertility_tracker_mem_t * data_buf);
 static float get_prev_temp(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
 static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
 static float get_historic_max_temp_f(fertility_tracker_mem_t * data_buf);
+static bool detect_ovulation(fertility_tracker_mem_t * data_buf);
 fertility_tracker_mem_t * get_fert_data();
+
+
 
 #define fertility_tracker_face ((const watch_face_t){ \
     fertility_tracker_face_setup, \
