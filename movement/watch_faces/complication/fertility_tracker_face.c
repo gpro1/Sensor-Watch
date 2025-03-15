@@ -528,7 +528,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
     watch_date_time temp_time;
     uint16_t days_in_state;
     int i;
-    uint8_t num_outliers;
+    uint8_t num_outliers = 0;
     float temp_temp;
     bool ovulation_confirmed = false;
     bool temp_shift_detected = false;
@@ -620,9 +620,16 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                 }
                 else if((temp_temp - data_buf->historic_max_temp_f) >= 0.4f)
                 {
-                    //Temp shift detect successful!
-                    temp_shift_detected = true;
-                    data_buf->cycle_next_state = SEEKING_OVULATION;
+                    //Before moving on, double check if we should skip seeking ovulation
+                    if(detect_ovulation(data_buf) == true)
+                    {
+                        //Skip SEEKING_OVULATION
+                        data_buf->cycle_next_state = OVULATION_CONFIRMED;
+                    }
+                    else
+                    {
+                        data_buf->cycle_next_state = SEEKING_OVULATION;
+                    }
                 }
                 else
                 {
@@ -630,13 +637,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                     data_buf->cycle_next_state = TEMP_SHIFT_DETECT_EXTEND;
                 }
 
-                //Before moving on, double check if we should skip seeking ovulation
-                ovulation_confirmed = detect_ovulation(data_buf);
-                if(temp_shift_detected && ovulation_confirmed)
-                {
-                    //Overwrite SEEKING_OVULATION
-                    data_buf->cycle_next_state = OVULATION_CONFIRMED;
-                }
+
             }
 
             break;
