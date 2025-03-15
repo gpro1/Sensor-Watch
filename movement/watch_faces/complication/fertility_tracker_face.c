@@ -894,6 +894,7 @@ uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
 static void enter_error_state(fertility_tracker_mem_t * data_buf)
 {
     data_buf->cycle_state = ERROR;
+    data_buf->cycle_next_state = ERROR;
 }
 
 //returns a temperature value from num_days_prev days before today
