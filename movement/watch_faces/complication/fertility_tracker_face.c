@@ -764,20 +764,25 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
             break; 
 
         case ESTROGEN:
-            if(data_buf->cycle_next_state == SEEKING_ESTROGEN && temp_time.unit.hour > 17 )
-            {
-                //NF after 6pm if next state is seeking_estrogen
-                fertility_status = false;
-            }
-            else
-            {
-                fertility_status = true;
-            }
+            fertility_status = true;
             break;
 
         case SEEKING_ESTROGEN:
-            //Non-fertile unless next state != seeking_estrogen
-            if(data_buf->cycle_next_state == SEEKING_ESTROGEN)
+            if(data_buf->cycle_next_state != SEEKING_ESTROGEN)
+            {
+                fertility_status = true;
+            }
+            else if(get_prev_fluid(0, data_buf) == 2 &&
+                    get_prev_fluid(1, data_buf) == 2 &&
+                    get_prev_fluid(2, data_buf) == 2 &&
+                    temp_time.unit.hour > 17)
+            {
+                fertility_status = false;
+            }
+            else if(get_prev_fluid(0, data_buf) == 2 &&
+                    get_prev_fluid(1, data_buf) == 2 &&
+                    get_prev_fluid(2, data_buf) == 2 &&
+                    get_prev_fluid(2, data_buf) == 2)
             {
                 fertility_status = false;
             }
