@@ -806,7 +806,7 @@ bool is_fertile(fertility_tracker_mem_t * data_buf)
             else if(get_prev_fluid(0, data_buf) == 2 &&
                     get_prev_fluid(1, data_buf) == 2 &&
                     get_prev_fluid(2, data_buf) == 2 &&
-                    get_prev_fluid(2, data_buf) == 2)
+                    get_prev_fluid(3, data_buf) == 2)
             {
                 fertility_status = false;
             }
