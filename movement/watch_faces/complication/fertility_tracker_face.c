@@ -566,7 +566,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             }
             else if(historic_max_temp_f == INVALID_TEMP)
             {
-                    enter_error_state(data_buf);
+                    //enter_error_state(data_buf);
             }
             else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
             {
