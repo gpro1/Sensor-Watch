@@ -43,7 +43,7 @@ typedef struct {
     uint8_t fluid_input;
     uint8_t temp_input[4]; //Integer digits 
     watch_date_time time_input;
-    face_action_t face_action;
+    enum face_action_t face_action;
     uint16_t data_index;
     enum fertility_face_state_t state;
     enum cycle_state_t cycle_next_state;
@@ -72,6 +72,10 @@ static float get_prev_temp(uint16_t num_days_prev, fertility_tracker_mem_t * dat
 static uint8_t get_prev_fluid(uint16_t num_days_prev, fertility_tracker_mem_t * data_buf);
 static float get_historic_max_temp_f(fertility_tracker_mem_t * data_buf);
 static bool detect_ovulation(fertility_tracker_mem_t * data_buf);
+static bool save_face_buf(fertility_tracker_mem_t * data_buf);
+static bool restore_face_buf(fertility_tracker_mem_t * data_buf);
+static bool reset_face_buf(fertility_tracker_mem_t * data_buf);
+
 fertility_tracker_mem_t * get_fert_data();
 
 

@@ -27,6 +27,7 @@
 #include <string.h>
 #include <math.h>
 #include "watch_utility.h"
+#include "filesystem.h"
 
 /* TODO:
 *   - Handle error conditions and corner cases
@@ -207,6 +208,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                         face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input[0] + face_buf->temp_input[1] + (0.1 * face_buf->temp_input[2]) + (0.01 * face_buf->temp_input[3]);
                         face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
                         iterate_cycle_fsm(face_buf);
+                        save_face_buf(face_buf);
                     }
                     else if(face_buf->face_action == LOAD)
                     {
@@ -214,6 +216,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     }
                     else if(face_buf->face_action == RESET)
                     {
+                        reset_face_buf(face_buf);
                         //delete files
                         //reset current data
                         //enter error state
@@ -1062,6 +1065,46 @@ static bool detect_ovulation(fertility_tracker_mem_t * data_buf)
     }
 
     return(result);
+}
+
+static bool save_face_buf(fertility_tracker_mem_t * data_buf)
+{
+    char filename [] = "fertility_face_data.bin";
+    bool return_val = true;
+
+    if(filesystem_file_exists(filename) == true)
+    {
+        filesystem_rm(filename);
+    }
+
+    return_val = filesystem_write_file(filename, (char *)data_buf, sizeof(fertility_tracker_mem_t));
+    if(return_val == false)
+    {
+        printf("Failed to write file! \n"); 
+    }
+    else
+    {
+        printf("Data saved: %lu\n", filesystem_get_file_size(filename));
+    }
+    return(return_val);
+}
+
+static bool restore_face_buf(fertility_tracker_mem_t * data_buf)
+{
+
+}
+
+static bool reset_face_buf(fertility_tracker_mem_t * data_buf)
+{
+    char filename [] = "fertility_face_data.bin";
+    bool return_val = true;
+
+    if(filesystem_file_exists(filename) == true)
+    {
+        filesystem_rm(filename);
+    }
+
+    return return_val;
 }
 
 fertility_tracker_mem_t * get_fert_data()
