@@ -193,7 +193,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case TEMP_ENTRY_4: 
                     watch_display_string("SA",0);
-                    face_buf->confirm_input = true;
+                    face_buf->face_action = SAVE;
                     watch_display_string("SAVE", 5);
                     face_buf->state = CONFIRM_ENTRY;
                 break;
@@ -201,12 +201,22 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 case CONFIRM_ENTRY:
                     face_buf->state = CALENDAR;
 
-                    if(face_buf->confirm_input == true)
+                    if(face_buf->face_action == SAVE)
                     {
                         face_buf->fluid_buf[face_buf->data_index] = face_buf->fluid_input;
                         face_buf->temp_buf[face_buf->data_index] = face_buf->temp_input[0] + face_buf->temp_input[1] + (0.1 * face_buf->temp_input[2]) + (0.01 * face_buf->temp_input[3]);
                         face_buf->time_buf[face_buf->data_index] = face_buf->time_input;
                         iterate_cycle_fsm(face_buf);
+                    }
+                    else if(face_buf->face_action == LOAD)
+                    {
+                        //load data from file if it exists
+                    }
+                    else if(face_buf->face_action == RESET)
+                    {
+                        //delete files
+                        //reset current data
+                        //enter error state
                     }
 
                     if(is_fertile(face_buf))
@@ -295,17 +305,33 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
                 case CONFIRM_ENTRY:
                 //Cycle between Y and N for confirmation
-                    if(face_buf->confirm_input == true)
+                    switch(face_buf->face_action)
                     {
-                        face_buf->confirm_input = false;
-                        watch_display_string(" DEL", 5);
+                        case SAVE:
+                            face_buf->face_action = DELETE;
+                            watch_display_string(" DEL", 5);
+                            break;
+                        
+                        case DELETE:
+                            face_buf->face_action = LOAD;
+                            watch_display_string("LOAD", 5);
+                            break;
+                        
+                        case LOAD:
+                            face_buf->face_action = RESET;
+                            watch_display_string(" RST", 5);
+                            break;
+                        
+                        case RESET:
+                            face_buf->face_action = SAVE;
+                            watch_display_string("SAVE", 5);
+                            break;
+                        
+                        default:
+                            face_buf->face_action = SAVE;
+                            watch_display_string("SAVE", 5);
+                            break;
                     }
-                    else
-                    {
-                        face_buf->confirm_input = true;
-                        watch_display_string("SAVE", 5);
-                    }
-
                 break;
 
                 case STATE_ERROR:
@@ -767,23 +793,25 @@ bool is_fertile(fertility_tracker_mem_t * data_buf)
             break; 
 
         case ESTROGEN:
-            /*if(data_buf->cycle_next_state == SEEKING_ESTROGEN && temp_time.unit.hour > 17 )
-            {
-                //NF after 6pm if next state is seeking_estrogen
-                fertility_status = false;
-            }
-            else
-            {
-                fertility_status = true;
-            }*/
-
             fertility_status = true;
-
             break;
 
         case SEEKING_ESTROGEN:
-            //Non-fertile unless next state != seeking_estrogen
-            /*if(data_buf->cycle_next_state == SEEKING_ESTROGEN)
+            if(data_buf->cycle_next_state != SEEKING_ESTROGEN)
+            {
+                fertility_status = true;
+            }
+            else if(get_prev_fluid(0, data_buf) == 2 &&
+                    get_prev_fluid(1, data_buf) == 2 &&
+                    get_prev_fluid(2, data_buf) == 2 &&
+                    temp_time.unit.hour > 17)
+            {
+                fertility_status = false;
+            }
+            else if(get_prev_fluid(0, data_buf) == 2 &&
+                    get_prev_fluid(1, data_buf) == 2 &&
+                    get_prev_fluid(2, data_buf) == 2 &&
+                    get_prev_fluid(3, data_buf) == 2)
             {
                 fertility_status = false;
             }

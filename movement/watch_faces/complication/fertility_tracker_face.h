@@ -34,6 +34,7 @@
 
 enum fertility_face_state_t {CALENDAR, FLUID_ENTRY, TEMP_ENTRY_1, TEMP_ENTRY_2, TEMP_ENTRY_3, TEMP_ENTRY_4, CONFIRM_ENTRY, STATE_ERROR};
 enum cycle_state_t{FLUID_CHANGE, ESTROGEN, SEEKING_ESTROGEN, TEMP_SHIFT_DETECT, TEMP_SHIFT_DETECT_EXTEND, SEEKING_OVULATION, OVULATION_CONFIRMED, ERRATIC_TEMPS, ERROR};
+enum face_action_t{SAVE, DELETE, LOAD, RESET};
 
 typedef struct {
     uint8_t fluid_buf[MEMORY_NUM_DAYS];
@@ -42,7 +43,7 @@ typedef struct {
     uint8_t fluid_input;
     uint8_t temp_input[4]; //Integer digits 
     watch_date_time time_input;
-    bool confirm_input;
+    face_action_t face_action;
     uint16_t data_index;
     enum fertility_face_state_t state;
     enum cycle_state_t cycle_next_state;
