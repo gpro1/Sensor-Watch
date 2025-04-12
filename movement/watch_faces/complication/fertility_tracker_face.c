@@ -34,6 +34,8 @@
 *
 */
 
+#define SAVE_FILENAME "fertility_face_data.bin"
+
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
     (void) settings; //silence error that settings is unused
@@ -210,6 +212,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     else if(face_buf->face_action == LOAD)
                     {
                         //load data from file if it exists
+                        restore_face_buf(face_buf);
                     }
                     else if(face_buf->face_action == RESET)
                     {
@@ -1064,18 +1067,37 @@ static bool save_face_buf(fertility_tracker_mem_t * data_buf)
 
 static bool restore_face_buf(fertility_tracker_mem_t * data_buf)
 {
+    char buf[FERTILITY_TRACKER_MEM_SIZE_BYTES];
+    char filename [] = SAVE_FILENAME;
+    bool return_val = true;
 
+    if(filesystem_file_exists(filename) == true)
+    {
+        return_val = filesystem_read_file(filename, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
+        memcpy(data_buf, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
+    }
+    else
+    {
+        return_val = false;
+    }
+
+    return(return_val);
 }
 
 static bool reset_face_buf(fertility_tracker_mem_t * data_buf)
 {
-    char filename [] = "fertility_face_data.bin";
+    char filename [] = SAVE_FILENAME;
     bool return_val = true;
 
     if(filesystem_file_exists(filename) == true)
     {
         filesystem_rm(filename);
     }
+
+    memset(data_buf, 0, sizeof(fertility_tracker_mem_t));
+    data_buf->state = CALENDAR;
+    data_buf->current_date = watch_rtc_get_date_time();
+    enter_error_state(data_buf);
 
     return return_val;
 }
