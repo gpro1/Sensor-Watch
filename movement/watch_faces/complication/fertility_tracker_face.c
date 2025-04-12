@@ -36,6 +36,8 @@
 #define FEVER_TEMP 100.40f
 #define MAX_MISSED_DAYS 14
 
+fertility_tracker_mem_t * mem_buf;
+
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
     (void) settings; //silence error that settings is unused
@@ -46,6 +48,7 @@ void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_f
     } 
     ((fertility_tracker_mem_t*)*context_ptr)->state = CALENDAR;
     ((fertility_tracker_mem_t*)*context_ptr)->current_date = watch_rtc_get_date_time();
+    mem_buf = *context_ptr;
 }
 
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context)
@@ -562,7 +565,7 @@ static void display_fluid_type(uint8_t value)
 }
 
 //Compares the date of both arguments. Returns true if they have the same date, otherwise false.
-static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
+bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 {
     bool result;
     result = (time1.unit.month == time2.unit.month);
@@ -572,7 +575,7 @@ static bool dates_are_equal(watch_date_time time1, watch_date_time time2)
 }
 
 //Run every time data is entered. Apply next state once per day
-static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
+enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 {
     float historic_max_temp_f;
     watch_date_time temp_time;
@@ -757,7 +760,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 }
 
 //Can be called any time the fsm has been iterated or any time watch face is entered
-static bool is_fertile(fertility_tracker_mem_t * data_buf)
+bool is_fertile(fertility_tracker_mem_t * data_buf)
 {
     bool fertility_status = true;
     watch_date_time temp_time;
@@ -861,7 +864,7 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
 /*  Returns the number of days difference between the two datetime arguments.
     Does not support more than a year. Can handle new month and new year situations
 */
-static uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
+uint16_t num_days_passed(watch_date_time date1, watch_date_time date2)
 {
     uint16_t date1_ytd;
     uint16_t date2_ytd;
@@ -1074,4 +1077,9 @@ static bool reset_face_buf(fertility_tracker_mem_t * data_buf)
     enter_error_state(data_buf);
 
     return return_val;
+}
+
+fertility_tracker_mem_t * get_fert_data()
+{
+    return (mem_buf);
 }

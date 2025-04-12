@@ -23,6 +23,8 @@
  */
 
 #include "shell_cmd_list.h"
+#include "fertility_tracker_face.h"
+#include "watch_utility.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -34,6 +36,7 @@
 static int help_cmd(int argc, char *argv[]);
 static int flash_cmd(int argc, char *argv[]);
 static int stress_cmd(int argc, char *argv[]);
+static int fert_test_cmd(int argc, char *argv[]);
 
 shell_command_t g_shell_commands[] = {
     {
@@ -106,6 +109,13 @@ shell_command_t g_shell_commands[] = {
         .max_args = 2,
         .cb = stress_cmd,
     },
+    {
+        .name = "fert_test",
+        .help = "enable a test of the fertility watch face; usage: fert_test",
+        .min_args = 0,
+        .max_args = 0,
+        .cb = fert_test_cmd,
+    },
 };
 
 const size_t g_num_shell_commands = sizeof(g_shell_commands) / sizeof(shell_command_t);
@@ -159,6 +169,107 @@ static int stress_cmd(int argc, char *argv[]) {
         if (delay > 0) {
             delay_ms(delay);
         }
+    }
+
+    return 0;
+}
+
+const float temp_data[] = {
+    97.85, 97.59, 96.54, 97.10, 97.45,
+    90.00,
+    96.75, 96.77, 96.97, 98.01, 97.19,
+    90.00,
+    97.11, 97.20, 97.18, 97.32, 97.73, 97.66,
+    90.00,
+    98.01, 98.20, 98.48, 98.44, 98.31, 97.94, 98.58, 98.42, 97.94, 97.80
+};
+
+const uint8_t fl_data[] = {
+    1, 1, 1, 1,
+    2, 2, 2, 2, 2,
+    4, 4, 4, 4, 4, 4, 4, 4,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+};
+
+static int fert_test_cmd(int argc, char *argv[])
+{
+    fertility_tracker_mem_t * face_buf = get_fert_data();
+    int i;
+    int j;
+    char fertile;
+    watch_date_time temp_time;
+    uint16_t num_days_missed;
+
+    face_buf->cycle_day_num = 1;
+    face_buf->current_date = watch_rtc_get_date_time();
+    temp_time = watch_rtc_get_date_time();
+
+    
+    for(i = 0; i < sizeof(fl_data); i++)
+    {
+        //input new data, cycle iterate FSM
+        face_buf->fluid_buf[face_buf->data_index] = fl_data[i];
+        face_buf->temp_buf[face_buf->data_index] = temp_data[i];
+        face_buf->time_buf[face_buf->data_index] = watch_rtc_get_date_time();
+        iterate_cycle_fsm(face_buf);
+
+        //Calculate fertility and print
+        if(is_fertile(face_buf))
+        {
+            fertile = 'F';
+        }
+        else
+        {
+            fertile = 'N';
+        }
+
+        printf("%hu : %c : %hu \r\n", face_buf->cycle_day_num, fertile, (uint8_t)face_buf->cycle_state);
+
+        //Calculate new date (years not supported)
+        temp_time.unit.day++;
+        if(temp_time.unit.day > days_in_month((uint8_t)temp_time.unit.month, (uint16_t)temp_time.unit.year))
+        {
+            temp_time.unit.day = 1;
+            temp_time.unit.month++;
+        }
+
+        //Set new date
+        watch_rtc_set_date_time(temp_time);
+
+        //Update state if a new day has arrived
+        if(!dates_are_equal(temp_time, face_buf->current_date))
+        {
+            //Check for missed days, log invalid data
+            //Also, pre-populate today with invalid data in case it is missed
+            num_days_missed = num_days_passed(temp_time, face_buf->current_date);
+            for(j = 0; j < num_days_missed; j++)
+            {
+                face_buf->data_index++;                                    
+                if(face_buf->data_index >= MEMORY_NUM_DAYS)
+                {
+                    face_buf->data_index = 0;
+                }
+                face_buf->fluid_buf[face_buf->data_index] = 0; 
+                face_buf->temp_buf[face_buf->data_index] = INVALID_TEMP;
+                face_buf->cycle_day_num++;
+            }
+
+            face_buf->current_date = temp_time;
+            
+            //Update the state based on next state
+            if(face_buf->cycle_state != face_buf->cycle_next_state) 
+            {
+                if(face_buf->cycle_next_state == FLUID_CHANGE)
+                {
+                    //Second day of cycle because M was logged yesterday.
+                    face_buf->cycle_day_num = 2;
+                }
+                face_buf->cycle_prev_state = face_buf->cycle_state;
+                face_buf->cycle_state = face_buf->cycle_next_state;
+                face_buf->cycle_state_start = temp_time;
+            }
+        }
+
     }
 
     return 0;
