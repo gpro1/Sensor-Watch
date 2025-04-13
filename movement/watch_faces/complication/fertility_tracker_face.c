@@ -29,11 +29,6 @@
 #include "watch_utility.h"
 #include "filesystem.h"
 
-/* TODO:
-*   - Handle error conditions and corner cases
-*
-*/
-
 #define SAVE_FILENAME "fertility_face_data.bin"
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
@@ -592,10 +587,10 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             {
                 data_buf->cycle_next_state = FLUID_CHANGE;
             }
-            else if(data_buf->fluid_buf[data_buf->data_index] == 2 && get_prev_fluid(1, data_buf) == 2) //Two Gs logged
+            /*else if(data_buf->fluid_buf[data_buf->data_index] == 2 && get_prev_fluid(1, data_buf) == 2) //Two Gs logged
             {
                 data_buf->cycle_next_state = SEEKING_ESTROGEN;
-            }
+            }*/
             else if(historic_max_temp_f == INVALID_TEMP)
             {
                     //enter_error_state(data_buf);
