@@ -207,6 +207,8 @@ static int fert_test_cmd(int argc, char *argv[])
     
     for(i = 0; i < sizeof(fl_data); i++)
     {
+        delay_ms(100);
+
         //input new data, cycle iterate FSM
         face_buf->fluid_buf[face_buf->data_index] = fl_data[i];
         face_buf->temp_buf[face_buf->data_index] = temp_data[i];
