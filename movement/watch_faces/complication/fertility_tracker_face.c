@@ -31,6 +31,11 @@
 
 #define SAVE_FILENAME "fertility_face_data.bin"
 
+#define NUM_EE_EL_SEARCH_DAYS 10
+#define INVALID_TEMP 90.00f
+#define FEVER_TEMP 100.40f
+#define MAX_MISSED_DAYS 14
+
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr)
 {
     (void) settings; //silence error that settings is unused
@@ -65,12 +70,17 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
 
             //Update state if a new day has arrived
             temp_time = watch_rtc_get_date_time();
-            if(!dates_are_equal(temp_time, face_buf->current_date))
-            {
+            num_days_missed = num_days_passed(temp_time, face_buf->current_date);
 
-                //Check for missed days, log invalid data
+            if(num_days_missed >= MAX_MISSED_DAYS)
+            {
+                enter_error_state(face_buf);
+                face_buf->current_date = temp_time;
+            }
+            else if(num_days_missed >= 1)
+            {
+                //Log missed days 
                 //Also, pre-populate today with invalid data in case it is missed
-                num_days_missed = num_days_passed(temp_time, face_buf->current_date);
                 for(i = 0; i < num_days_missed; i++)
                 {
                     face_buf->data_index++;                                    
