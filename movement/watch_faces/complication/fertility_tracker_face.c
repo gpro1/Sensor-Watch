@@ -1031,12 +1031,12 @@ static bool restore_face_buf(fertility_tracker_mem_t * data_buf)
     char filename [] = SAVE_FILENAME;
     bool return_val = true;
 
-    if(filesystem_file_exists(filename) == true)
+    if((filesystem_file_exists(filename) == true) && (FERTILITY_TRACKER_MEM_SIZE_BYTES <= sizeof(fertility_tracker_mem_t)))
     {
-        return_val = filesystem_read_file(filename, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
+        return_val = filesystem_read_file(filename, buf, sizeof(fertility_tracker_mem_t));
         if(return_val == true)
         {
-            memcpy(data_buf, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
+            memcpy(data_buf, buf, sizeof(fertility_tracker_mem_t));
         }
         
     }

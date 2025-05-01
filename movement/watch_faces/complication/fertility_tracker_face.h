@@ -57,7 +57,7 @@ typedef struct {
     
 } fertility_tracker_mem_t;
 
-#define FERTILITY_TRACKER_MEM_SIZE_BYTES 580
+#define FERTILITY_TRACKER_MEM_SIZE_BYTES 320
 
 void fertility_tracker_face_setup(movement_settings_t *settings, uint8_t watch_face_index, void ** context_ptr);
 void fertility_tracker_face_activate(movement_settings_t *settings, void *context);
