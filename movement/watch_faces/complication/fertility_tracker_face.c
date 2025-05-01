@@ -30,6 +30,8 @@
 #include "filesystem.h"
 
 #define SAVE_FILENAME "fertility_face_data.bin"
+#define DEBUG_FILENAME "fert_debug_data.txt"
+#define DEBUG_FILE_MAX_LINE_SIZE 15
 
 #define NUM_EE_EL_SEARCH_DAYS 10
 #define INVALID_TEMP 90.00f
@@ -86,6 +88,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 //Also, pre-populate today with invalid data in case it is missed
                 for(i = 0; i < num_days_missed; i++)
                 {
+                    save_debug_data(face_buf);
                     face_buf->data_index++;                                    
                     if(face_buf->data_index >= MEMORY_NUM_DAYS)
                     {
@@ -1077,6 +1080,23 @@ static bool reset_face_buf(fertility_tracker_mem_t * data_buf)
     enter_error_state(data_buf);
 
     return return_val;
+}
+
+static void save_debug_data(fertility_tracker_mem_t * data_buf)
+{
+    char filename [] = DEBUG_FILENAME;
+    char buf [DEBUG_FILE_MAX_LINE_SIZE];
+
+    snprintf(buf, sizeof(buf), "%.2f,%u,%u,%u\n", data_buf->temp_buf[data_buf->data_index], data_buf->fluid_buf[data_buf->data_index], data_buf->cycle_state, data_buf->cycle_day_num);
+    
+    if(filesystem_file_exists(filename) == false)
+    {
+        filesystem_write_file(filename, &buf, strlen(&buf));
+    }
+    else
+    {
+        filesystem_append_file(filename, &buf, strlen(&buf));
+    }
 }
 
 fertility_tracker_mem_t * get_fert_data()

@@ -75,6 +75,7 @@ static bool save_face_buf(fertility_tracker_mem_t * data_buf);
 static bool restore_face_buf(fertility_tracker_mem_t * data_buf);
 static bool reset_face_buf(fertility_tracker_mem_t * data_buf);
 
+static void save_debug_data(fertility_tracker_mem_t * data_buf);
 fertility_tracker_mem_t * get_fert_data();
 
 
