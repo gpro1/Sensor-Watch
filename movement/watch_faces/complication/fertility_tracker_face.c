@@ -34,8 +34,7 @@
 #define DEBUG_FILE_MAX_LINE_SIZE 15
 
 #define NUM_EE_EL_SEARCH_DAYS 10
-#define INVALID_TEMP 90.00f
-#define FEVER_TEMP 100.40f
+
 #define MAX_MISSED_DAYS 14
 
 fertility_tracker_mem_t * mem_buf;
