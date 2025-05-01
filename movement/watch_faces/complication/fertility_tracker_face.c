@@ -102,6 +102,19 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                     face_buf->cycle_state_start = temp_time;
                 }
             }
+
+            if(is_fertile(face_buf))
+            {
+                watch_display_string(" FERT ",4);
+            }
+            else
+            {
+                watch_display_string("NFERT ",4);
+            }
+            
+            watch_display_string("  ",0);
+            snprintf(buf, sizeof(buf), "%2hu", face_buf->cycle_day_num);
+            watch_display_string(buf, 2);
             break;
 
         case EVENT_MODE_LONG_PRESS: 
@@ -244,7 +257,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
             switch(face_buf->state)
             {
                 case CALENDAR:
-                //Increment current date, display fertility data
+ 
                 break;
 
                 case FLUID_ENTRY:
@@ -580,20 +593,16 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
 
                In case of one invalid temperature (90.00 or any temp > 99.50), this value can be skipped and the previous day is used.
                In case of two invalid temperatures, both can be skipped but an extra day must be used (ie the max of 7 days).
-               In case of >2 invalid temperatures, proceed to error state
+               In case of >2 invalid temperatures wait in this state
             */
             historic_max_temp_f = get_historic_max_temp_f(data_buf); 
             if(data_buf->fluid_buf[data_buf->data_index] == 1) //M logged
             {
                 data_buf->cycle_next_state = FLUID_CHANGE;
             }
-            /*else if(data_buf->fluid_buf[data_buf->data_index] == 2 && get_prev_fluid(1, data_buf) == 2) //Two Gs logged
-            {
-                data_buf->cycle_next_state = SEEKING_ESTROGEN;
-            }*/
             else if(historic_max_temp_f == INVALID_TEMP)
             {
-                    //enter_error_state(data_buf);
+                break;
             }
             else if(data_buf->temp_buf[data_buf->data_index] - historic_max_temp_f >= 0.2f)
             {
@@ -601,18 +610,6 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
                     data_buf->cycle_next_state = TEMP_SHIFT_DETECT;
                     data_buf->historic_max_temp_f = historic_max_temp_f;
                     data_buf->first_high_temp = &(data_buf->temp_buf[data_buf->data_index]);
-            }
-
-            break;
-
-        case SEEKING_ESTROGEN:
-            if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL/EE logged
-            {
-                data_buf->cycle_next_state = ESTROGEN;
-            }
-            else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M loggeed
-            {
-                data_buf->cycle_next_state = FLUID_CHANGE;
             }
 
             break;
@@ -743,7 +740,7 @@ static enum cycle_state_t iterate_cycle_fsm(fertility_tracker_mem_t * data_buf)
             break;
 
         default:
-
+            enter_error_state(data_buf);
             break;
     }
     return(data_buf->cycle_next_state);
@@ -765,16 +762,16 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
                 G = NF
                 EL/EE = F
             */
-           if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL/EE
-           {
-                fertility_status = true;
-           }
-           else if(data_buf->fluid_buf[data_buf->data_index] == 2) //G
-           {
-                fertility_status = false;
-           }
-           else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M
-           {
+            if(data_buf->fluid_buf[data_buf->data_index] > 2) //EL/EE
+            {
+                    fertility_status = true;
+            }
+            else if(data_buf->fluid_buf[data_buf->data_index] == 2) //G
+            {
+                    fertility_status = false;
+            }
+            else if(data_buf->fluid_buf[data_buf->data_index] == 1) //M
+            {
                 if(num_days_passed(data_buf->cycle_state_start, temp_time) < 4 && data_buf->cycle_prev_state == OVULATION_CONFIRMED)
                 {
                     fertility_status = false;
@@ -783,40 +780,15 @@ static bool is_fertile(fertility_tracker_mem_t * data_buf)
                 {
                     fertility_status = true;
                 }
-           }
-           else
-           {
-                fertility_status = true;
-           }
+            }
+            else
+            {
+                    fertility_status = true;
+            }
             break; 
 
         case ESTROGEN:
             fertility_status = true;
-            break;
-
-        case SEEKING_ESTROGEN:
-            if(data_buf->cycle_next_state != SEEKING_ESTROGEN)
-            {
-                fertility_status = true;
-            }
-            else if(get_prev_fluid(0, data_buf) == 2 &&
-                    get_prev_fluid(1, data_buf) == 2 &&
-                    get_prev_fluid(2, data_buf) == 2 &&
-                    temp_time.unit.hour > 17)
-            {
-                fertility_status = false;
-            }
-            else if(get_prev_fluid(0, data_buf) == 2 &&
-                    get_prev_fluid(1, data_buf) == 2 &&
-                    get_prev_fluid(2, data_buf) == 2 &&
-                    get_prev_fluid(3, data_buf) == 2)
-            {
-                fertility_status = false;
-            }
-            else
-            {
-                fertility_status = true;
-            }
             break;
 
         case TEMP_SHIFT_DETECT:
@@ -1049,14 +1021,7 @@ static bool save_face_buf(fertility_tracker_mem_t * data_buf)
     }
 
     return_val = filesystem_write_file(filename, (char *)data_buf, sizeof(fertility_tracker_mem_t));
-    if(return_val == false)
-    {
-        printf("Failed to write file! \n"); 
-    }
-    else
-    {
-        printf("Data saved: %lu\n", filesystem_get_file_size(filename));
-    }
+
     return(return_val);
 }
 
@@ -1069,7 +1034,11 @@ static bool restore_face_buf(fertility_tracker_mem_t * data_buf)
     if(filesystem_file_exists(filename) == true)
     {
         return_val = filesystem_read_file(filename, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
-        memcpy(data_buf, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
+        if(return_val == true)
+        {
+            memcpy(data_buf, buf, FERTILITY_TRACKER_MEM_SIZE_BYTES);
+        }
+        
     }
     else
     {
