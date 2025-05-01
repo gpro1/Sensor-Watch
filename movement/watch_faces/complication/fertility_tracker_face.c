@@ -202,7 +202,7 @@ bool fertility_tracker_face_loop(movement_event_t event, movement_settings_t *se
                 case TEMP_ENTRY_4: 
                     watch_display_string("SA",0);
                     face_buf->face_action = SAVE;
-                    watch_display_string("SAVE", 5);
+                    watch_display_string(" SAVE", 4);
                     face_buf->state = CONFIRM_ENTRY;
                 break;
 
